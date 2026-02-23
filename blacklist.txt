@@ -181,6 +181,7 @@ takbengang
 ahuni
 refraktori
 gisi
+gagampam
 transferan
 isogonal
 ajian
