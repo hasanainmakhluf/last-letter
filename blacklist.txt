@@ -18,6 +18,7 @@ ahare
 ysh
 ft
 akalakalan
+atavistis
 acarya
 falang
 ips
