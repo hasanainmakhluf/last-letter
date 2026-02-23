@@ -41,6 +41,7 @@ radiotelegram
 terselindung
 saliwang
 karon
+pilates
 tandor
 arapota
 atud
@@ -165,7 +166,7 @@ harkitnas
 antropogenik
 sarudu
 tiksofobia
-pilates
+ngalorngidul
 transpria
 teranggun
 ahai
