@@ -95,6 +95,7 @@ imogolit
 alm
 atavistis
 sinarsuminar
+sangiran
 harkitnas
 sarudu
 tiksofobia
