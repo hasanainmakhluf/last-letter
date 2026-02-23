@@ -90,6 +90,7 @@ takbengang
 angganganggang
 sirai
 refraktori
+banas
 gisi
 banofi
 transferan
