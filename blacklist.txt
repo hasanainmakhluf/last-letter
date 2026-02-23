@@ -12,6 +12,7 @@ banas
 ulp
 tahini
 none
+amanita
 ysh
 eraman
 atud
