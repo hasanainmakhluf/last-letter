@@ -59,6 +59,7 @@ ambrung
 ikhtilat
 airan
 atikifobia
+aktinoblas
 utasan
 hidungmu
 ngerires
@@ -191,7 +192,7 @@ arakin
 transponder
 abisopelagik
 adneksitis
-aktinoblas
+ngau
 ataksofobia
 ips
 nomografi
