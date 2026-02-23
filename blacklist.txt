@@ -97,6 +97,7 @@ transpria
 abdikasim
 reshuffle
 atomologi
+curek
 yamo
 arakin
 ahaun
