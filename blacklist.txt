@@ -15,6 +15,7 @@ komolom
 ahare
 ysh
 acarya
+falang
 ips
 utasan
 irasan
