@@ -43,6 +43,7 @@ cassia
 iktiosis
 komolom
 ahare
+renjat
 atelofobia
 konga
 tunaharga
@@ -65,7 +66,7 @@ ips
 autokatalisis
 adneksitis
 isantesik
-renjat
+reduktase
 haute
 arigol
 rainbow
