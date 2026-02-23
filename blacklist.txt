@@ -16,6 +16,7 @@ sirai
 refraktori
 ugu
 satelit
+gisi
 falang
 mukbang
 akalakalan
