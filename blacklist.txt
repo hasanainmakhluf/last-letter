@@ -90,6 +90,7 @@ takbengang
 angganganggang
 sirai
 refraktori
+yumper
 banas
 gisi
 banofi
