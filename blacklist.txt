@@ -29,6 +29,7 @@ takjelas
 kahumata
 laguhlagah
 ukhuah
+none
 nirdividen
 tawazun
 iringiringan
@@ -82,7 +83,7 @@ ngerires
 atelofobia
 ngeloyor
 tunaharga
-none
+riangriang
 uto
 ngira
 ambrung
