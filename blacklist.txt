@@ -30,6 +30,7 @@ oregano
 radiotelegram
 arapota
 alama
+masteran
 yonko
 anggrang
 apang
