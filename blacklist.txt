@@ -23,6 +23,7 @@ satelit
 gisi
 falang
 isogonal
+ahasale
 ahuneyo
 mukbang
 akalakalan
