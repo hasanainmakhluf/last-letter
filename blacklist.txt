@@ -52,6 +52,7 @@ akropetal
 kahohon
 iatrofobia
 cassia
+ngurangura
 mahrib
 iritan
 mbis
@@ -65,7 +66,7 @@ atelofobia
 ngeloyor
 tunaharga
 none
-ngurangura
+uto
 ngira
 ambrung
 ikhtilat
