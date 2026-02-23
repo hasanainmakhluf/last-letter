@@ -18,6 +18,7 @@ ugu
 satelit
 gisi
 falang
+isogonal
 mukbang
 akalakalan
 acarya
