@@ -20,6 +20,7 @@ ugu
 hamam
 satelit
 takterbatas
+antropogenik
 ysh
 gegilak
 eraman
@@ -172,7 +173,7 @@ sinarsuminar
 gitir
 sangiran
 harkitnas
-antropogenik
+ahilo
 sarudu
 tiksofobia
 ngalorngidul
