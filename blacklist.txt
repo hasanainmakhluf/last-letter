@@ -185,6 +185,7 @@ higrograf
 litometeor
 arhanud
 utron
+yonkoma
 autonisasi
 amaiamai
 arame
@@ -259,7 +260,7 @@ nyari
 isantesik
 ritenuto
 tiksofobia
-yonkoma
+akrodinia
 komolom
 autokatalisis
 ahuneyo
