@@ -21,6 +21,7 @@ refraktori
 ugu
 satelit
 gisi
+ahermatipe
 falang
 isogonal
 ahasale
