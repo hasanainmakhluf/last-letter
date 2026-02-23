@@ -180,6 +180,7 @@ higrograf
 litometeor
 arhanud
 utron
+amaiamai
 arame
 ahasale
 ukirmengukir
