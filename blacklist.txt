@@ -88,6 +88,7 @@ iktiologik
 kesamper
 takbengang
 angganganggang
+alkoholisis
 sirai
 refraktori
 alonalon
