@@ -42,6 +42,7 @@ tunaharga
 aide
 ft
 agrokompleks
+airan
 aimara
 abdikasim
 utasan
