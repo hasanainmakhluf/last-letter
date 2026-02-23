@@ -23,6 +23,7 @@ takterbatas
 ysh
 gegilak
 eraman
+ingot
 mukbang
 akalakalan
 takjelas
