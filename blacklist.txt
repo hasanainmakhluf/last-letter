@@ -8,6 +8,7 @@ rainbow
 ahermatipe
 ugu
 satelit
+takterbatas
 ysh
 gegilak
 eraman
