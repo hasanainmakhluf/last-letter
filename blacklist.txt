@@ -183,6 +183,7 @@ refraktori
 gisi
 transferan
 isogonal
+ajian
 imunokompetensi
 kancing
 higrograf
