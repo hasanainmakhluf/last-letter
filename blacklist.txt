@@ -184,6 +184,7 @@ transferan
 isogonal
 kancing
 higrograf
+inam
 litometeor
 arhanud
 utron
