@@ -56,6 +56,7 @@ ahare
 atelofobia
 ngeloyor
 tunaharga
+none
 ngurangura
 ngira
 ambrung
