@@ -182,6 +182,7 @@ atelokolagen
 takbengang
 ahuni
 refraktori
+alawatae
 gisi
 gagampam
 transferan
@@ -217,7 +218,7 @@ abak
 abonem
 rainbow
 abdikasim
-alawatae
+asidulan
 hajah
 audite
 aliali
