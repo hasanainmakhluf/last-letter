@@ -69,6 +69,7 @@ reduktase
 yohano
 haplomorf
 kanofilia
+iktiosis
 rizoid
 arigol
 konga
@@ -192,7 +193,7 @@ bilabila
 isantesik
 ritenuto
 haute
-iktiosis
+kenangan
 pasraman
 ionogram
 auau
