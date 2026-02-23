@@ -17,6 +17,7 @@ irasan
 sirai
 ahare
 ysh
+karon
 ft
 komolom
 akalakalan
