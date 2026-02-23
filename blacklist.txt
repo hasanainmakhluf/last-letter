@@ -10,6 +10,7 @@ ageman
 sapun
 iradians
 rambusa
+kiamboi
 ambungambung
 abak
 abonem
