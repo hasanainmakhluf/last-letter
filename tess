@@ -1,9 +1,9 @@
--- // 1. TOMBOL MANDIRI (FIXED LOGIC) // --
+-- // 1. TOMBOL MANDIRI (VERSI INPUTBEGAN - ANTI GAGAL) // --
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local RobloxGui = CoreGui:WaitForChild("RobloxGui")
     
-    -- Pembersihan
+    -- Hapus tombol lama
     if RobloxGui:FindFirstChild("VanishedMobileToggle") then
         RobloxGui.VanishedMobileToggle:Destroy()
     end
@@ -18,37 +18,45 @@ task.spawn(function()
     ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
     ImageButton.Size = UDim2.new(0, 45, 0, 45) 
     ImageButton.Image = "rbxassetid://85002796312935" 
-    ImageButton.Draggable = true 
     ImageButton.Active = true
+    ImageButton.Draggable = true 
 
     Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
     local Stroke = Instance.new("UIStroke", ImageButton)
     Stroke.Color = Color3.fromRGB(255, 255, 255)
     Stroke.Thickness = 2
 
-    -- LOGIKA KLIK (MENGGUNAKAN GLOBAL VARIABLE)
-    ImageButton.MouseButton1Click:Connect(function()
-        -- 1. Coba panggil fungsi Minimize resmi (Paling Stabil & Ada Animasi)
+    -- FUNGSI TOGGLE (DIBUAT TERPISAH AGAR RAPI)
+    local function ToggleMenu()
         if _G.Fluent and _G.Fluent.Minimize then
             _G.Fluent:Minimize()
         else
-            -- 2. Jika gagal, cari foldernya berdasarkan isi (Sapu Jagat)
-            local targetUi = CoreGui:FindFirstChild("Fluent") or 
-                             CoreGui:FindFirstChild("Fluent Gui") or
-                             game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            
-            if targetUi then
-                targetUi.Enabled = not targetUi.Enabled
+            -- Cari manual jika variabel belum siap
+            local target = CoreGui:FindFirstChild("Fluent") or 
+                           CoreGui:FindFirstChild("Fluent Gui") or 
+                           game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            if target then
+                target.Enabled = not target.Enabled
+                if target:FindFirstChild("Main") then
+                    target.Main.Visible = target.Enabled
+                end
             end
+        end
+    end
+
+    -- DETEKSI KLIK MENGGUNAKAN INPUTBEGAN (LEBIH SENSITIF UNTUK MOBILE)
+    ImageButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            ToggleMenu()
         end
     end)
 end)
 
--- // 2. LOAD LIBRARY & SET GLOBAL // --
+-- // 2. LOAD LIBRARY & PENDAFTARAN GLOBAL // --
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-_G.Fluent = Fluent -- INI WAJIB: Agar tombol di atas bisa baca variabel 'Fluent'
+_G.Fluent = Fluent -- INI KUNCI AGAR TOMBOL DI ATAS BISA JALAN
 
--- Lanjutkan script Window:CreateWindow kamu di bawah...
+-- ... Lanjutkan Window:CreateWindow kamu ...
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
 local Window = Fluent:CreateWindow({
