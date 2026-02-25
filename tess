@@ -327,43 +327,50 @@ Window:OnProcessed(function()
 end)
 
 -- // 6. TOMBOL MINIMIZE KHUSUS MOBILE // --
--- // 6. TOMBOL MINIMIZE KHUSUS MOBILE (DELTA EXECUTOR OPTIMIZED) // --
+-- // 6. TOMBOL MINIMIZE KHUSUS PORTRAIT (DIJAMIN MUNCUL) // --
 task.spawn(function()
-    -- Tunggu sebentar agar executor selesai memproses library utama
-    task.wait(1)
-
-    local CoreGui = game:GetService("CoreGui")
+    -- Tunggu Fluent benar-benar siap
+    repeat task.wait() until Fluent
     
-    -- Hapus tombol lama jika ada di CoreGui atau PlayerGui
-    if CoreGui:FindFirstChild("VanishedMobileToggle") then
-        CoreGui.VanishedMobileToggle:Destroy()
+    local Player = game.Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+    
+    -- Cari di mana Fluent menaruh UI-nya (biasanya di PlayerGui atau CoreGui)
+    local TargetParent = PlayerGui
+    if game:GetService("CoreGui"):FindFirstChild("ScreenGui") then -- Cek apakah Fluent di CoreGui
+        TargetParent = game:GetService("CoreGui")
     end
-    
+
+    -- Hapus tombol lama jika ada
+    if TargetParent:FindFirstChild("VanishedMobileToggle") then
+        TargetParent.VanishedMobileToggle:Destroy()
+    end
+
     local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-
     ScreenGui.Name = "VanishedMobileToggle"
-    -- Kita coba taruh di CoreGui. Jika executor Delta-mu memblokir CoreGui,
-    -- ganti baris bawah ini menjadi: ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
-    ScreenGui.Parent = CoreGui 
-    ScreenGui.IgnoreGuiInset = true 
-    ScreenGui.DisplayOrder = 999999 -- Nilai maksimal
+    ScreenGui.Parent = TargetParent
+    ScreenGui.DisplayOrder = 99999 -- Di atas segalanya
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.ResetOnSpawn = false
 
+    local ImageButton = Instance.new("ImageButton")
+    ImageButton.Name = "ToggleButton"
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     ImageButton.BorderSizePixel = 0
+    
+    -- // POSISI TENGAH ATAS KHUSUS PORTRAIT // --
     ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
-
-    -- Posisi diatur lebih rendah (0.25) agar tidak bertabrakan dengan Notch/Kamera HP
-    ImageButton.Position = UDim2.new(0.5, 0, 0.25, 0) 
+    -- X = 0.5 (Tengah), Y = 0.1 (Agak atas, di bawah notifikasi)
+    ImageButton.Position = UDim2.new(0.5, 0, 0.1, 0) 
     ImageButton.Size = UDim2.new(0, 50, 0, 50) 
     ImageButton.Image = "rbxassetid://85002796312935" 
-    ImageButton.Active = true
-    ImageButton.ZIndex = 1000000
+    ImageButton.ZIndex = 100000
+    ImageButton.ClipsDescendants = true
 
-    -- Membuat Border & Bulat
+    -- Efek Visual
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 15)
+    UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = ImageButton
 
     local UIStroke = Instance.new("UIStroke")
@@ -371,7 +378,7 @@ task.spawn(function()
     UIStroke.Thickness = 2.5
     UIStroke.Parent = ImageButton
 
-    -- // LOGIKA DRAG MULUS // --
+    -- // DRAG LOGIC // --
     local UserInputService = game:GetService("UserInputService")
     local dragging, dragInput, dragStart, startPos
 
@@ -396,13 +403,8 @@ task.spawn(function()
         end
     end)
 
-    -- // KLIK UNTUK MINIMIZE // --
+    -- // KLIK ACTION // --
     ImageButton.MouseButton1Click:Connect(function()
-        if Fluent then
-            Fluent:Minimize() 
-        end
+        Fluent:Minimize()
     end)
-
-    -- Notifikasi sederhana tanpa Fluent (untuk cek apakah script jalan)
-    print("Vanished Hub: Tombol Toggle Berhasil Dimuat!")
 end)
