@@ -327,7 +327,11 @@ Window:OnProcessed(function()
 end)
 
 -- // 6. TOMBOL MINIMIZE KHUSUS MOBILE // --
--- // LOGIKA FORCE NOTIFICATION // --
+-- // 6. TOMBOL MINIMIZE FORCE APPEAR (Tanpa Deteksi) // --
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Fungsi Notifikasi untuk Testing
 local function notify(title, content)
     Fluent:Notify({
         Title = title,
@@ -336,14 +340,7 @@ local function notify(title, content)
     })
 end
 
--- // 6. TOMBOL MINIMIZE KHUSUS PORTRAIT (VERSI TERKUAT) // --
-local Player = game.Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-
--- Notifikasi bahwa script tombol mulai dimuat
-notify("Vanished Hub", "Memasang tombol mobile...")
-
--- Hapus tombol lama agar tidak menumpuk
+-- Hapus tombol lama jika ada (agar tidak double saat re-exec)
 if PlayerGui:FindFirstChild("VanishedMobileToggle") then
     PlayerGui.VanishedMobileToggle:Destroy()
 end
@@ -355,31 +352,31 @@ ScreenGui.Name = "VanishedMobileToggle"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false 
 ScreenGui.IgnoreGuiInset = true 
-ScreenGui.DisplayOrder = 999 -- Memastikan berada di lapisan paling depan
+ScreenGui.DisplayOrder = 9999 -- Angka tertinggi agar tidak tertutup apapun
 
 ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ImageButton.BorderSizePixel = 0
-
--- // POSISI TENGAH AGAK BAWAH (Agar tidak tertutup UI game atas) // --
 ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageButton.Position = UDim2.new(0.5, 0, 0.15, 0) -- Diturunkan ke 0.15 agar tidak tertutup notifikasi
-ImageButton.Size = UDim2.new(0, 50, 0, 50) 
+
+-- Posisi diturunkan lagi ke 0.2 agar benar-benar terlihat di bawah TopBar Roblox
+ImageButton.Position = UDim2.new(0.5, 0, 0.2, 0) 
+ImageButton.Size = UDim2.new(0, 55, 0, 55) -- Ukuran diperbesar sedikit
 ImageButton.Image = "rbxassetid://85002796312935" 
 ImageButton.Active = true
-ImageButton.ZIndex = 1000
+ImageButton.ZIndex = 10000
 
--- Efek Bulat & Stroke Putih Terang
+-- Efek Bulat & Stroke (Garis Tepi)
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = ImageButton
 
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Color = Color3.fromRGB(255, 255, 255)
-UIStroke.Thickness = 3 -- Stroke ditebalkan agar terlihat
+UIStroke.Thickness = 3
 UIStroke.Parent = ImageButton
 
--- Logika Drag Mulus
+-- // LOGIKA DRAG MULUS // --
 local UserInputService = game:GetService("UserInputService")
 local dragging, dragInput, dragStart, startPos
 
@@ -406,8 +403,8 @@ end)
 
 -- Fungsi Klik
 ImageButton.MouseButton1Click:Connect(function()
-    notify("System", "Menu Toggled!")
     Fluent:Minimize() 
 end)
 
-notify("Success", "Tombol Mobile Muncul di Tengah Atas!")
+-- Jalankan notifikasi agar kamu tahu script sampai di sini
+notify("Vanished Hub", "Tombol Mobile Dipaksa Muncul!")
