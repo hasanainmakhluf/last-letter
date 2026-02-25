@@ -28,6 +28,7 @@ nakes
 imunogenetik
 iringiringan
 radiotelegram
+arko
 arapota
 alama
 masteran
