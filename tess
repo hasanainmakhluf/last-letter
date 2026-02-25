@@ -1,53 +1,64 @@
--- // 1. TOMBOL MANDIRI (REMOTE MINIMIZE) // --
+-- // 1. TOMBOL MANDIRI - JALUR EKSPRES (UPDATE TERBARU) // --
 task.spawn(function()
-    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    -- Kasih jeda dikit biar Delta napas dulu
+    task.wait(0.5) 
+
+    local CoreGui = game:GetService("CoreGui")
+    local RobloxGui = CoreGui:WaitForChild("RobloxGui", 5) or CoreGui
     
-    -- Hapus tombol lama agar tidak tumpuk
+    -- Bersihkan yang lama
     if RobloxGui:FindFirstChild("VanishedMobileToggle") then
         RobloxGui.VanishedMobileToggle:Destroy()
     end
 
-    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
-    ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.DisplayOrder = 9999999
-    ScreenGui.IgnoreGuiInset = true
+    local sg = Instance.new("ScreenGui", RobloxGui)
+    sg.Name = "VanishedMobileToggle"
+    sg.DisplayOrder = 9999999
+    sg.IgnoreGuiInset = true
 
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
-    ImageButton.Position = UDim2.new(0, 20, 0.4, 0) -- Posisi kiri tengah agar nyaman
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Image = "rbxassetid://85002796312935"
-    ImageButton.Active = true
-    ImageButton.Draggable = true
+    local btn = Instance.new("ImageButton", sg)
+    btn.Size = UDim2.new(0, 45, 0, 45)
+    btn.Position = UDim2.new(0.1, 0, 0.2, 0) -- Diturunkan dikit biar gak nabrak chat
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Image = "rbxassetid://85002796312935"
+    btn.Active = true
+    btn.Draggable = true
 
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.new(1, 1, 1)
-    Stroke.Thickness = 2
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", btn)
+    st.Color = Color3.new(1, 1, 1)
+    st.Thickness = 2
 
-    -- LOGIKA KLIK: MENEMBAK TOMBOL MINIMIZE FLUENT
-    ImageButton.MouseButton1Click:Connect(function()
-        -- Cari UI Fluent secara manual
-        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                         game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-        
-        if FluentUI then
-            -- Tembak langsung ke fungsi Minimize bawaan library lewat Variabel Global
-            if Fluent and Fluent.Minimize then
-                Fluent:Minimize()
-            else
-                -- Jika variabel Fluent belum terbaca, paksa tekan tombol minimize-nya secara virtual
-                local Main = FluentUI:FindFirstChild("Main")
-                if Main then
-                    -- Fluent biasanya menyembunyikan Frame 'Main' saat di-minimize
-                    Main.Visible = not Main.Visible
+    -- LOGIKA KLIK: SAMA DENGAN TOMBOL MINIMIZE (-)
+    btn.MouseButton1Click:Connect(function()
+        -- 1. Coba pake cara elegan (Fungsi internal Fluent)
+        if _G.FluentObject and _G.FluentObject.Minimize then
+            _G.FluentObject:Minimize()
+        else
+            -- 2. Cara Brutal (Sapu Jagat) jika library belum terbaca sempurna
+            local found = false
+            local checkPlaces = {CoreGui, game.Players.LocalPlayer:FindFirstChild("PlayerGui")}
+            for _, p in pairs(checkPlaces) do
+                if not p then continue end
+                for _, gui in pairs(p:GetChildren()) do
+                    if gui:IsA("ScreenGui") and (gui.Name == "Fluent" or gui:FindFirstChild("Main")) and gui.Name ~= "VanishedMobileToggle" then
+                        gui.Enabled = not gui.Enabled
+                        if gui:FindFirstChild("Main") then
+                            gui.Main.Visible = gui.Enabled
+                        end
+                        found = true
+                    end
                 end
             end
         end
     end)
 end)
 
+-- // 2. LOAD LIBRARY // --
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+_G.FluentObject = Fluent -- Simpan ke Global supaya tombol di atas bisa akses
+
+-- // LANJUTKAN SISA SCRIPT KAMU DI SINI // --
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
