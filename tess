@@ -1,10 +1,11 @@
--- // 1. TOMBOL MANDIRI (TARUH DI PALING ATAS) // --
+-- // 1. TOMBOL MANDIRI (FIXED LOGIC) // --
 task.spawn(function()
-    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    local CoreGui = game:GetService("CoreGui")
+    local RobloxGui = CoreGui:WaitForChild("RobloxGui")
     
-    -- Bersihkan sisa tombol lama
-    for _, child in pairs(RobloxGui:GetChildren()) do
-        if child.Name == "VanishedMobileToggle" then child:Destroy() end
+    -- Pembersihan
+    if RobloxGui:FindFirstChild("VanishedMobileToggle") then
+        RobloxGui.VanishedMobileToggle:Destroy()
     end
 
     local ScreenGui = Instance.new("ScreenGui", RobloxGui)
@@ -25,24 +26,29 @@ task.spawn(function()
     Stroke.Color = Color3.fromRGB(255, 255, 255)
     Stroke.Thickness = 2
 
-    -- LOGIKA KLIK MANUAL (TANPA VARIABEL)
+    -- LOGIKA KLIK (MENGGUNAKAN GLOBAL VARIABLE)
     ImageButton.MouseButton1Click:Connect(function()
-        local Target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                       game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-        
-        if Target then
-            local Main = Target:FindFirstChild("Main")
-            if Main then
-                Main.Visible = not Main.Visible
-            else
-                Target.Enabled = not Target.Enabled
+        -- 1. Coba panggil fungsi Minimize resmi (Paling Stabil & Ada Animasi)
+        if _G.Fluent and _G.Fluent.Minimize then
+            _G.Fluent:Minimize()
+        else
+            -- 2. Jika gagal, cari foldernya berdasarkan isi (Sapu Jagat)
+            local targetUi = CoreGui:FindFirstChild("Fluent") or 
+                             CoreGui:FindFirstChild("Fluent Gui") or
+                             game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            
+            if targetUi then
+                targetUi.Enabled = not targetUi.Enabled
             end
         end
     end)
 end)
 
+-- // 2. LOAD LIBRARY & SET GLOBAL // --
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+_G.Fluent = Fluent -- INI WAJIB: Agar tombol di atas bisa baca variabel 'Fluent'
 
+-- Lanjutkan script Window:CreateWindow kamu di bawah...
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
 local Window = Fluent:CreateWindow({
