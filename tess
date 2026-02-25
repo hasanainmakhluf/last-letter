@@ -1,4 +1,51 @@
+-- // 1. TOMBOL MANDIRI (REMOTE MINIMIZE) // --
+task.spawn(function()
+    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    
+    -- Hapus tombol lama agar tidak tumpuk
+    if RobloxGui:FindFirstChild("VanishedMobileToggle") then
+        RobloxGui.VanishedMobileToggle:Destroy()
+    end
 
+    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
+    ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.DisplayOrder = 9999999
+    ScreenGui.IgnoreGuiInset = true
+
+    local ImageButton = Instance.new("ImageButton", ScreenGui)
+    ImageButton.Size = UDim2.new(0, 45, 0, 45)
+    ImageButton.Position = UDim2.new(0, 20, 0.4, 0) -- Posisi kiri tengah agar nyaman
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.Image = "rbxassetid://85002796312935"
+    ImageButton.Active = true
+    ImageButton.Draggable = true
+
+    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", ImageButton)
+    Stroke.Color = Color3.new(1, 1, 1)
+    Stroke.Thickness = 2
+
+    -- LOGIKA KLIK: MENEMBAK TOMBOL MINIMIZE FLUENT
+    ImageButton.MouseButton1Click:Connect(function()
+        -- Cari UI Fluent secara manual
+        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                         game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+        
+        if FluentUI then
+            -- Tembak langsung ke fungsi Minimize bawaan library lewat Variabel Global
+            if Fluent and Fluent.Minimize then
+                Fluent:Minimize()
+            else
+                -- Jika variabel Fluent belum terbaca, paksa tekan tombol minimize-nya secara virtual
+                local Main = FluentUI:FindFirstChild("Main")
+                if Main then
+                    -- Fluent biasanya menyembunyikan Frame 'Main' saat di-minimize
+                    Main.Visible = not Main.Visible
+                end
+            end
+        end
+    end)
+end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
@@ -328,51 +375,3 @@ Window:OnProcessed(function()
     })
 end)
 
--- // 6. TOMBOL TOGGLE (DILETAKKAN DI PALING BAWAH SCRIPT) // --
-local function CreateToggle()
-    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
-    
-    -- Hapus tombol lama jika ada (Pembersihan)
-    for _, v in pairs(RobloxGui:GetChildren()) do
-        if v.Name == "VanishedMobileToggle" then v:Destroy() end
-    end
-
-    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
-    ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.DisplayOrder = 9999999
-    ScreenGui.IgnoreGuiInset = true
-
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0)
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Image = "rbxassetid://85002796312935"
-    ImageButton.Active = true
-    ImageButton.Draggable = true
-
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.new(1, 1, 1)
-    Stroke.Thickness = 2
-
-    -- LOGIKA KLIK YANG SUDAH TERHUBUNG KE FLUENT
-    ImageButton.MouseButton1Click:Connect(function()
-        if Fluent then
-            -- Gunakan fungsi internal Fluent (Paling Stabil)
-            Fluent:Minimize()
-        else
-            -- Cara Manual Jika Variable Fluent Terputus
-            local Target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                           game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if Target then
-                Target.Enabled = not Target.Enabled
-                if Target:FindFirstChild("Main") then
-                    Target.Main.Visible = Target.Enabled
-                end
-            end
-        end
-    end)
-end
-
--- Panggil fungsinya
-CreateToggle()
