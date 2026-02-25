@@ -1,47 +1,57 @@
--- // FORCE RENDER TO ROBLOX CORE // --
-local function ForceButton()
-    local success, err = pcall(function()
-        local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
-        
-        -- Cek jika sudah ada
-        if RobloxGui:FindFirstChild("EmergencyV") then RobloxGui.EmergencyV:Destroy() end
+-- // 6. FINAL TOGGLE LOGIC (SMOOTH & STABLE) // --
+task.spawn(function()
+    -- Menggunakan RobloxGui agar tidak diblokir sistem Delta
+    local TargetParent = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    
+    -- Pembersihan tombol lama
+    if TargetParent:FindFirstChild("VanishedMobileToggle") then
+        TargetParent.VanishedMobileToggle:Destroy()
+    end
 
-        local sg = Instance.new("ScreenGui")
-        sg.Name = "EmergencyV"
-        sg.Parent = RobloxGui -- Paksa masuk ke folder sistem Roblox
-        sg.DisplayOrder = 999999
-        sg.IgnoreGuiInset = true
+    local ScreenGui = Instance.new("ScreenGui")
+    local ImageButton = Instance.new("ImageButton")
 
-        local btn = Instance.new("TextButton")
-        btn.Parent = sg
-        btn.Size = UDim2.new(0, 60, 0, 60)
-        btn.Position = UDim2.new(0.5, -30, 0.05, 0) -- Tepat di tengah atas layar
-        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Text = "OPEN"
-        btn.TextColor3 = Color3.new(0, 0, 0)
-        btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 20
-        btn.ZIndex = 1000000
-        btn.Draggable = true
+    ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.Parent = TargetParent
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.IgnoreGuiInset = true 
+    ScreenGui.DisplayOrder = 999999
 
-        btn.MouseButton1Click:Connect(function()
-            -- Cara paling brutal cari GUI Fluent
-            for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do
-                if v:IsA("ScreenGui") and (v.Name == "Fluent" or v:FindFirstChild("Main")) then
-                    v.Enabled = not v.Enabled
-                end
+    ImageButton.Parent = ScreenGui
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.BorderSizePixel = 0
+    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
+    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Draggable = true 
+    ImageButton.ZIndex = 1000000
+
+    -- Visual Bulat & Border
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = ImageButton
+
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(255, 255, 255)
+    UIStroke.Thickness = 2
+    UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
+    UIStroke.Parent = ImageButton
+
+    -- // LOGIKA BUKA TUTUP (SMOOTH TOGGLE) // --
+    ImageButton.MouseButton1Click:Connect(function()
+        if Fluent then
+            -- Menggunakan fungsi bawaan Fluent agar ada animasi transisi
+            Fluent:Minimize() 
+        else
+            -- Fallback jika Fluent belum siap (Force Toggle)
+            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                        game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            if gui then
+                gui.Enabled = not gui.Enabled
             end
-            for _, v in pairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
-                if v:IsA("ScreenGui") and (v.Name == "Fluent" or v:FindFirstChild("Main")) then
-                    v.Enabled = not v.Enabled
-                end
-            end
-        end)
+        end
     end)
-    if not success then print("Gagal paksa tombol: " .. tostring(err)) end
-end
-
-task.spawn(ForceButton)
+end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
