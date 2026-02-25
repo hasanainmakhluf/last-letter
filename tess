@@ -1,28 +1,414 @@
- local ScreenGui = Instance.new("ScreenGui")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local isMobile = game:GetService("UserInputService").TouchEnabled
+
+local Window = Fluent:CreateWindow({
+    Title = "Vanished Hub",
+    SubTitle = "v1.0",
+    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
+    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.RightControl
+})
+
+-- 1. DAFTARKAN SEMUA TAB
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    About = Window:AddTab({ Title = "About", Icon = "info" })
+}
+
+-- LANGSUNG KE TAB MAIN (INSTAN)
+Window:SelectTab(1)
+
+-- // 1. DATABASE KAMUS LOADER & BLACKLIST // --
+local Dictionary = {}
+local UsedWords = {} 
+local Blacklist = {} 
+local KamusReady = false
+local PriorityLetter = "" 
+
+-- Sumber Data (GitHub)
+local BlacklistURL = "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/blacklist.txt"
+local KamusURLs = {
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI1.txt",
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI2.txt",
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI3.txt",
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI4.txt",
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBIv4.txt",
+    "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst",
+    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI5"
+}
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MatchUIEvent = ReplicatedStorage.Remotes:WaitForChild("MatchUI")
+local BillboardEnd = ReplicatedStorage.Remotes:WaitForChild("BillboardEnd")
+local ResultUIEvent = ReplicatedStorage.Remotes:WaitForChild("ResultUI")
+
+-- // FUNGSI LOAD DATA // --
+local function loadKamus()
+    local bSuccess, bResponse = pcall(function() return game:HttpGet(BlacklistURL) end)
+    if bSuccess then
+        for line in bResponse:gmatch("[^\r\n]+") do
+            local clean = line:lower():gsub("%s+", "")
+            if #clean > 0 then Blacklist[clean] = true end
+        end
+    end
+
+    local RawList = {}
+    for i, url in ipairs(KamusURLs) do
+        local success, response = pcall(function() return game:HttpGet(url) end)
+        if success then
+            for line in response:gmatch("[^\r\n]+") do
+                local firstPart = line:match("^%s*([%a%-]+)") 
+                if firstPart then
+                    local cleanWord = firstPart:lower():gsub("[^%a]", "")
+                    if #cleanWord >= 2 and not Blacklist[cleanWord] then
+                        table.insert(RawList, cleanWord)
+                    end
+                end
+            end
+        end
+    end
+
+    local tempSeen = {}
+    for _, word in ipairs(RawList) do
+        if not tempSeen[word] then
+            table.insert(Dictionary, word)
+            tempSeen[word] = true
+        end
+    end
+    
+    if #Dictionary > 0 then
+        KamusReady = true
+    end
+end
+
+task.spawn(loadKamus)
+
+-- // 2. LOGIKA AUTO-INPUT // --
+local CurrentPrefix = ""
+local MyTurnActive = false
+
+local function cariKataBaru(prefix)
+    local matches = {}
+    local priorityMatches = {}
+    
+    for _, word in ipairs(Dictionary) do
+        if word:sub(1, #prefix) == prefix and not UsedWords[word] and #word > #prefix then
+            if _G.PriorityActive and PriorityLetter ~= "" then
+                if word:sub(-#PriorityLetter) == PriorityLetter then
+                    table.insert(priorityMatches, word)
+                end
+            end
+            table.insert(matches, word)
+        end
+    end
+    
+    if #priorityMatches > 0 then return priorityMatches[math.random(1, #priorityMatches)] end
+    if #matches > 0 then return matches[math.random(1, #matches)] end
+    return nil
+end
+
+local function executeAutoInput()
+    local retryCount = 0
+    local maxRetries = 5
+    local lastSuffixLength = 0
+
+    while MyTurnActive and retryCount < maxRetries do
+        if retryCount > 0 and lastSuffixLength > 0 then
+            for i = 1, lastSuffixLength do
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Backspace, false, game)
+                task.wait(0.1)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Backspace, false, game)
+            end
+            task.wait(0.1)
+        end
+
+        local chosenWord = cariKataBaru(CurrentPrefix)
+        if not chosenWord then break end
+
+        if retryCount == 0 then task.wait(2) else task.wait(1) end
+        if not MyTurnActive then break end
+
+        local suffix = chosenWord:sub(#CurrentPrefix + 1)
+        lastSuffixLength = #suffix
+
+        for i = 1, #suffix do
+    if not MyTurnActive then break end
+    local char = suffix:sub(i, i):upper()
+    local code = Enum.KeyCode[char]
+    
+    if code then
+        VirtualInputManager:SendKeyEvent(true, code, false, game)
+        task.wait(0.01) -- Jeda tekan tombol (tetap kecil agar responsif)
+        VirtualInputManager:SendKeyEvent(false, code, false, game)
+        pcall(function() ReplicatedStorage.Remotes.TypeSound:FireServer() end)
+    end
+    
+    -- MEMBUAT JEDA RANDOM 0.1 - 0.5 DETIK
+    local randomDelay = math.random(10, 50) / 100 
+    task.wait(randomDelay) 
+    end
+
+        if not MyTurnActive then break end
+
+        task.wait(0.01) -- Delay sebelum Enter dipercepat dari 0.05
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+        task.wait(0.01)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+        
+        UsedWords[chosenWord] = true
+        task.wait(1) -- Delay istirahat dipercepat dari 1.2
+        
+        if not MyTurnActive then return else retryCount = retryCount + 1 end
+    end
+end
+
+-- // 3. ISI KONTEN TAB MAIN // --
+local Toggle1 = Tabs.Main:AddToggle("AutoAnswerToggle", {
+    Title = "Auto Answer", 
+    Default = false,
+    Description = "Menjawab pertanyaan secara otomatis saat giliranmu"
+})
+
+Toggle1:OnChanged(function()
+    if Toggle1.Value and MyTurnActive and KamusReady then task.spawn(executeAutoInput) end
+end)
+
+local MyInput = Tabs.Main:AddInput("LastLetterPriority", {
+    Title = "Priority Last Letter",
+    Default = "",
+    Placeholder = "Ketik huruf akhiran (contoh: k)...",
+    Callback = function(Value) PriorityLetter = Value:lower():gsub("%s+", "") end
+})
+
+local TogglePriority = Tabs.Main:AddToggle("PriorityToggle", {
+    Title = "Enable Priority Letter",
+    Default = false,
+    Description = "Utamakan kata yang berakhiran huruf di atas"
+})
+
+TogglePriority:OnChanged(function() _G.PriorityActive = TogglePriority.Value end)
+
+local Toggle2 = Tabs.Main:AddToggle("AutoJoinToggle", { 
+    Title = "Auto Join Table 8", 
+    Default = false,
+    Description = "Otomatis masuk ke meja 8 orang"
+})
+
+Toggle2:OnChanged(function()
+    _G.AutoJoin = Toggle2.Value
+    if _G.AutoJoin then
+        task.spawn(function()
+            while _G.AutoJoin do
+                if not game.Players.LocalPlayer:GetAttribute("CurrentTable") then
+                    ReplicatedStorage.Remotes.JoinTable:FireServer("Table_8P")
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+local Toggle3 = Tabs.Main:AddToggle("UnblockJumpToggle", {
+    Title = "Unblock Jump & Speed", 
+    Default = false,
+    Description = "Bypass pembatasan gerak saat bermain"
+})
+
+Toggle3:OnChanged(function()
+    _G.UnblockActive = Toggle3.Value
+    
+    if _G.UnblockActive then
+        task.spawn(function()
+            local CAS = game:GetService("ContextActionService")
+            while _G.UnblockActive do
+                -- Buka blokir dari sistem game
+                CAS:UnbindAction("BlockJump")
+                
+                local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    -- Paksa aktif saat Toggle ON
+                    hum.JumpPower = 50 
+                    hum.JumpHeight = 7.2
+                    hum.WalkSpeed = 16
+                end
+                task.wait(0.1)
+            end
+        end)
+    else
+        -- LOGIKA SAAT OFF (BLOCK JIKA SEDANG MAIN)
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        local isAtTable = game.Players.LocalPlayer:GetAttribute("CurrentTable") ~= nil
+        
+        if hum then
+            if isAtTable then
+                -- Kunci total gerakan jika sedang di meja dan Toggle OFF
+                hum.JumpPower = 0
+                hum.JumpHeight = 0
+                hum.WalkSpeed = 0
+                Fluent:Notify({ Title = "Movement Blocked", Content = "Gerakan dikunci kembali.", Duration = 3 })
+            else
+                -- Normal kembali jika di Lobby
+                hum.JumpPower = 50
+                hum.JumpHeight = 7.2
+                hum.WalkSpeed = 16
+            end
+        end
+    end
+end)
+
+-- 4. ISI KONTEN TAB ABOUT
+Tabs.About:AddParagraph({ Title = "Script Info", Content = "Created by: Vanished Hub" })
+Tabs.About:AddButton({
+    Title = "Copy Discord Link",
+    Description = "Klik untuk menyalin link komunitas",
+    Callback = function()
+        setclipboard("https://discord.gg/NcG6cnZ3m5")
+        Fluent:Notify({ Title = "Success", Content = "Link copied!", Duration = 3 })
+    end
+})
+
+-- // 5. EVENT HANDLER & RESETTER // --
+local function resetJump()
+    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower = 50
+        hum.JumpHeight = 7.2
+        if hum.WalkSpeed <= 0 then hum.WalkSpeed = 16 end
+    end
+end
+
+MatchUIEvent.OnClientEvent:Connect(function(action, value)
+    if action == "UpdateServerLetter" then
+        CurrentPrefix = tostring(value):lower()
+    elseif action == "StartTurn" then
+        MyTurnActive = true
+        if KamusReady and Toggle1.Value then 
+            task.spawn(executeAutoInput) 
+        end
+    elseif action == "EndTurn" then
+        MyTurnActive = false
+        if not _G.UnblockActive then resetJump() end
+    end
+end)
+
+BillboardEnd.OnClientEvent:Connect(function()
+    MyTurnActive = false
+    resetJump()
+end)
+
+ResultUIEvent.OnClientEvent:Connect(function()
+    MyTurnActive = false
+    resetJump()
+end)
+
+-- // LOGIKA CLOSE DIALOG // --
+Window:OnProcessed(function()
+    Window:Dialog({
+        Title = "Close Script",
+        Content = "Apakah kamu ingin mematikan script sepenuhnya?",
+        Buttons = {
+            {
+                Title = "Yes",
+                Callback = function()
+                    _G.UnblockActive = false
+                    _G.AutoJoin = false
+                    _G.PriorityActive = false
+                    MyTurnActive = false
+                    resetJump()
+                    Fluent:Destroy()
+                end
+            },
+            { Title = "No", Callback = function() end }
+        }
+    })
+end)
+
+-- // 6. TOMBOL MINIMIZE KHUSUS MOBILE // --
+-- // 6. TOMBOL MINIMIZE UNIVERSAL (PC & MOBILE) // --
+task.spawn(function()
+    local CoreGui = game:GetService("CoreGui")
+    local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Menentukan Parent (Mencoba CoreGui dulu, jika gagal ke PlayerGui)
+    local TargetParent = CoreGui
+    local s, e = pcall(function() local t = Instance.new("ScreenGui", CoreGui) t:Destroy() end)
+    if not s then TargetParent = PlayerGui end
+
+    -- Hapus tombol lama jika ada agar tidak double saat re-exec
+    if TargetParent:FindFirstChild("VanishedMobileToggle") then
+        TargetParent.VanishedMobileToggle:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
     local ImageButton = Instance.new("ImageButton")
 
     ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.Parent = game:GetService("CoreGui") -- Agar tidak hilang saat reset karakter
+    ScreenGui.Parent = TargetParent
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.IgnoreGuiInset = true -- Sangat penting untuk layar Portrait agar tidak tertutup bar atas
 
     ImageButton.Parent = ScreenGui
     ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) -- Posisi tombol di layar
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) -- Ukuran box tombol
-    ImageButton.Image = "rbxassetid://85002796312935" -- Icon Box/Menu
-    ImageButton.Draggable = true -- Supaya tombol bisa digeser-geser di HP
+    
+    -- Posisi Tengah Atas (Universal untuk Portrait/Landscape)
+    ImageButton.AnchorPoint = Vector2.new(0.5, 0.5) 
+    ImageButton.Position = UDim2.new(0.5, 0, 0.1, 0) -- 10% dari atas layar
+    
+    ImageButton.Size = UDim2.new(0, 45, 0, 45)
+    ImageButton.Image = "rbxassetid://85002796312935"
+    ImageButton.Active = true
+    ImageButton.ZIndex = 1000
 
-    -- Efek Bulat (Rounded Corner)
+    -- Efek Visual (Bulat & Border)
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(0, 10)
     UICorner.Parent = ImageButton
 
-    -- Efek Border Cantik
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Color3.fromRGB(255, 255, 255)
     UIStroke.Thickness = 2
     UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
     UIStroke.Parent = ImageButton
 
-    
+    -- // LOGIKA DRAG MULUS (MENDUKUNG MOUSE & TOUCH) // --
+    local UserInputService = game:GetService("UserInputService")
+    local dragging, dragInput, dragStart, startPos
+
+    ImageButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = ImageButton.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    ImageButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- // FUNGSI KLIK // --
+    ImageButton.MouseButton1Click:Connect(function()
+        if Fluent then
+            Fluent:Minimize()
+        end
+    end)
+end)
