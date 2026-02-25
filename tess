@@ -328,63 +328,59 @@ Window:OnProcessed(function()
     })
 end)
 
--- // 6. TOMBOL MINIMIZE STANDALONE (FORCE SHOW) // --
-task.spawn(function()
-    -- Jangan pakai pcall rumit, langsung tembak ke tempat yang Delta suka
-    local TargetParent = game:GetService("CoreGui") 
-    
-    -- Cek jika CoreGui bisa diakses, jika tidak lari ke PlayerGui
+-- // 6. TOMBOL TOGGLE MANDIRI (ANTI-WAIT) // --
+local function CreateMobileToggle()
+    local TargetParent = game:GetService("CoreGui")
     local success = pcall(function() return TargetParent.Name end)
-    if not success then
-        TargetParent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    end
+    if not success then TargetParent = game:GetService("Players").LocalPlayer.PlayerGui end
 
-    -- Bersihkan sisa-sisa tombol lama
-    if TargetParent:FindFirstChild("VanishedMobileToggle") then
-        TargetParent.VanishedMobileToggle:Destroy()
+    -- Hapus yang lama jika ada
+    if TargetParent:FindFirstChild("VanishedToggle") then
+        TargetParent.VanishedToggle:Destroy()
     end
 
     local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-
-    ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.Name = "VanishedToggle"
     ScreenGui.Parent = TargetParent
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.IgnoreGuiInset = true 
-    ScreenGui.DisplayOrder = 999 -- Pastikan di atas GUI game
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.DisplayOrder = 9999
 
-    ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    ImageButton.BorderSizePixel = 0
-    ImageButton.AnchorPoint = Vector2.new(0.5, 0.5) 
-    -- Pindahkan posisi sedikit ke kanan agar tidak menutupi tombol chat roblox (0.15)
-    ImageButton.Position = UDim2.new(0.5, 0, 0.15, 0) 
-    ImageButton.Size = UDim2.new(0, 50, 0, 50)
-    ImageButton.Image = "rbxassetid://85002796312935"
-    ImageButton.Active = true
-    ImageButton.Draggable = true -- Gunakan fitur bawaan roblox agar hemat memory
-    ImageButton.ZIndex = 10000
+    local Button = Instance.new("ImageButton")
+    Button.Name = "MainButton"
+    Button.Parent = ScreenGui
+    Button.Size = UDim2.new(0, 50, 0, 50)
+    Button.Position = UDim2.new(0.1, 0, 0.15, 0) -- Posisi kiri atas agar aman
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Button.Image = "rbxassetid://85002796312935"
+    Button.Active = true
+    Button.Draggable = true -- Mandiri drag
 
-    -- Visual: Bulat & Border Putih
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 12)
-    UICorner.Parent = ImageButton
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 10)
+    Corner.Parent = Button
 
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 255, 255)
-    UIStroke.Thickness = 2.5
-    UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
-    UIStroke.Parent = ImageButton
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Thickness = 2
+    Stroke.Color = Color3.fromRGB(255, 255, 255)
+    Stroke.Parent = Button
 
-    -- FUNGSI KLIK
-    ImageButton.MouseButton1Click:Connect(function()
-        if Fluent then
-            Fluent:Minimize()
+    -- LOGIKA KLIK MANDIRI
+    Button.MouseButton1Click:Connect(function()
+        -- Cari UI Fluent secara manual di manapun dia berada
+        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+        
+        if FluentUI then
+            FluentUI.Enabled = not FluentUI.Enabled
         else
-            -- Jika Fluent belum siap tapi tombol diklik
-            warn("Vanished Hub: Menunggu Fluent Library...")
+            -- Jika Fluent belum di-load sama sekali
+            local StarterGui = game:GetService("StarterGui")
+            StarterGui:SetCore("SendNotification", {
+                Title = "Vanished Hub",
+                Text = "Menu belum siap, tunggu sebentar...",
+                Duration = 2
+            })
         end
     end)
-    
-    print("Vanished Hub: Icon Toggle Berhasil Dipaksa Muncul!")
-end)
+end
+
+CreateMobileToggle()
