@@ -1,49 +1,51 @@
--- // 1. INISIALISASI LIBRARY & GLOBAL VARIABLE // --
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-_G.Fluent = Fluent -- Disimpan ke global agar bisa diakses task.spawn
-
--- // 2. TOMBOL TOGGLE (DIPERBAIKI TOTAL) // --
+-- // 1. TOMBOL MANDIRI (BARIS 1 - JAMIN MUNCUL) // --
 task.spawn(function()
-    local Player = game:GetService("Players").LocalPlayer
-    local PlayerGui = Player:WaitForChild("PlayerGui")
     local CoreGui = game:GetService("CoreGui")
-    
-    -- Bersihkan sisa tombol lama (Core & PlayerGui)
-    for _, name in pairs({"VanishedMobileToggle", "VanishedToggle", "EmergencyV"}) do
-        if PlayerGui:FindFirstChild(name) then PlayerGui[name]:Destroy() end
-        if CoreGui:FindFirstChild(name) then CoreGui[name]:Destroy() end
+    -- Tunggu sebentar agar executor tidak shock
+    task.wait(2)
+
+    -- Pembersihan tombol lama
+    for _, v in pairs(CoreGui:GetChildren()) do
+        if v.Name == "VanishedMobileToggle" then v:Destroy() end
     end
 
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.Parent = PlayerGui -- Menggunakan PlayerGui agar lebih responsif di Mobile
-    ScreenGui.DisplayOrder = 9999999
-    ScreenGui.IgnoreGuiInset = true
+    local sg = Instance.new("ScreenGui", CoreGui)
+    sg.Name = "VanishedMobileToggle"
+    sg.DisplayOrder = 9999999
+    sg.IgnoreGuiInset = true
 
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Position = UDim2.new(0, 15, 0.5, -22) 
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
-    ImageButton.Active = true
-    ImageButton.Draggable = true 
+    local btn = Instance.new("ImageButton", sg)
+    btn.Size = UDim2.new(0, 45, 0, 45)
+    btn.Position = UDim2.new(0.1, 0, 0.2, 0) -- Posisi agak atas samping kiri
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Image = "rbxassetid://85002796312935"
+    btn.Active = true
+    btn.Draggable = true 
 
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Thickness = 2
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", btn)
+    st.Color = Color3.new(1, 1, 1)
+    st.Thickness = 2
 
-    -- FUNGSI KLIK (MENGGUNAKAN LOGIKA INTERNAL FLUENT)
-    ImageButton.MouseButton1Down:Connect(function()
-        if _G.Fluent then
-            _G.Fluent:Minimize() -- Memanggil fungsi minimize asli library
-        else
-            -- Cadangan jika library error
-            local gui = CoreGui:FindFirstChild("Fluent") or PlayerGui:FindFirstChild("Fluent")
-            if gui then gui.Enabled = not gui.Enabled end
+    -- LOGIKA KLIK (LANGSUNG TEMBAK KE FOLDER)
+    btn.MouseButton1Down:Connect(function()
+        -- Cari UI Fluent (Library Fluent biasanya membuat ScreenGui bernama 'Fluent' atau 'Fluent Gui')
+        local target = CoreGui:FindFirstChild("Fluent") or CoreGui:FindFirstChild("Fluent Gui") or 
+                       game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+        
+        if target then
+            local main = target:FindFirstChild("Main")
+            if main then
+                main.Visible = not main.Visible
+            else
+                target.Enabled = not target.Enabled
+            end
         end
     end)
 end)
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
 local Window = Fluent:CreateWindow({
