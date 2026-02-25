@@ -1,43 +1,47 @@
--- // 1. TOMBOL HARUS LAHIR DULUAN (PALING ATAS) // --
-task.spawn(function()
-    local p = game.Players.LocalPlayer
-    local pg = p:WaitForChild("PlayerGui")
-    
-    -- Kita coba taruh di PlayerGui saja karena Delta lebih stabil di sini
-    if pg:FindFirstChild("VanishedToggle") then pg.VanishedToggle:Destroy() end
-
-    local sg = Instance.new("ScreenGui", pg)
-    sg.Name = "VanishedToggle"
-    sg.ResetOnSpawn = false
-    sg.DisplayOrder = 999999 -- Sangat tinggi
-
-    local btn = Instance.new("TextButton", sg)
-    btn.Size = UDim2.new(0, 50, 0, 50)
-    btn.Position = UDim2.new(0, 20, 0.4, 0) -- Di sebelah kiri tengah agar terlihat
-    btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- WARNA MERAH BIAR KELIHATAN JELAS
-    btn.Text = "V"
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.Offset
-    btn.TextSize = 30
-    btn.Draggable = true
-
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(1, 0) -- Buat jadi bulat
-
-    btn.MouseButton1Click:Connect(function()
-        -- Cari UI Fluent secara paksa di CoreGui atau PlayerGui
-        local f1 = game.CoreGui:FindFirstChild("Fluent")
-        local f2 = pg:FindFirstChild("Fluent")
-        local target = f1 or f2
+-- // FORCE RENDER TO ROBLOX CORE // --
+local function ForceButton()
+    local success, err = pcall(function()
+        local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
         
-        if target then
-            target.Enabled = not target.Enabled
-        else
-            print("Menu belum siap!")
-        end
+        -- Cek jika sudah ada
+        if RobloxGui:FindFirstChild("EmergencyV") then RobloxGui.EmergencyV:Destroy() end
+
+        local sg = Instance.new("ScreenGui")
+        sg.Name = "EmergencyV"
+        sg.Parent = RobloxGui -- Paksa masuk ke folder sistem Roblox
+        sg.DisplayOrder = 999999
+        sg.IgnoreGuiInset = true
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = sg
+        btn.Size = UDim2.new(0, 60, 0, 60)
+        btn.Position = UDim2.new(0.5, -30, 0.05, 0) -- Tepat di tengah atas layar
+        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = "OPEN"
+        btn.TextColor3 = Color3.new(0, 0, 0)
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 20
+        btn.ZIndex = 1000000
+        btn.Draggable = true
+
+        btn.MouseButton1Click:Connect(function()
+            -- Cara paling brutal cari GUI Fluent
+            for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do
+                if v:IsA("ScreenGui") and (v.Name == "Fluent" or v:FindFirstChild("Main")) then
+                    v.Enabled = not v.Enabled
+                end
+            end
+            for _, v in pairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
+                if v:IsA("ScreenGui") and (v.Name == "Fluent" or v:FindFirstChild("Main")) then
+                    v.Enabled = not v.Enabled
+                end
+            end
+        end)
     end)
-    print("Tombol V Merah Berhasil Dibuat!")
-end)
+    if not success then print("Gagal paksa tombol: " .. tostring(err)) end
+end
+
+task.spawn(ForceButton)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
