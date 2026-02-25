@@ -1,49 +1,47 @@
--- // 6. FINAL TOGGLE LOGIC (SMOOTH & STABLE) // --
+-- // 6. FINAL MOBILE TOGGLE (GANTI BOX PUTIH JADI ICON) // --
 task.spawn(function()
-    -- Menggunakan RobloxGui agar tidak diblokir sistem Delta
-    local TargetParent = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
     
-    -- Pembersihan tombol lama
-    if TargetParent:FindFirstChild("VanishedMobileToggle") then
-        TargetParent.VanishedMobileToggle:Destroy()
-    end
+    -- Hapus tombol "OPEN" putih yang lama agar tidak tumpang tindih
+    if RobloxGui:FindFirstChild("EmergencyV") then RobloxGui.EmergencyV:Destroy() end
+    if RobloxGui:FindFirstChild("VanishedMobileToggle") then RobloxGui.VanishedMobileToggle:Destroy() end
 
     local ScreenGui = Instance.new("ScreenGui")
     local ImageButton = Instance.new("ImageButton")
 
     ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.Parent = TargetParent
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.Parent = RobloxGui 
     ScreenGui.IgnoreGuiInset = true 
     ScreenGui.DisplayOrder = 999999
 
+    -- Setting Visual Tombol (Ganti Putih jadi Gelap + Icon)
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Warna Gelap
     ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) -- Posisi di kiri atas
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) -- Ukuran Box
+    ImageButton.Image = "rbxassetid://85002796312935" -- Icon Box kamu
     ImageButton.Draggable = true 
     ImageButton.ZIndex = 1000000
 
-    -- Visual Bulat & Border
+    -- Efek Bulat
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(0, 10)
     UICorner.Parent = ImageButton
 
+    -- Efek Border Putih Cantik
     local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 255, 255)
+    UIStroke.Color = Color3.fromRGB(255, 255, 255) -- Warna Border
     UIStroke.Thickness = 2
     UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
     UIStroke.Parent = ImageButton
 
-    -- // LOGIKA BUKA TUTUP (SMOOTH TOGGLE) // --
+    -- LOGIKA BUKA TUTUP GUI FLUENT
     ImageButton.MouseButton1Click:Connect(function()
         if Fluent then
-            -- Menggunakan fungsi bawaan Fluent agar ada animasi transisi
-            Fluent:Minimize() 
+            Fluent:Minimize() -- Panggil fungsi tutup/buka dari library
         else
-            -- Fallback jika Fluent belum siap (Force Toggle)
+            -- Jika library belum siap, cari manual foldernages
             local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
                         game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
             if gui then
@@ -51,6 +49,8 @@ task.spawn(function()
             end
         end
     end)
+    
+    print("Vanished Hub: Icon Box Berhasil Menggantikan Tombol Putih!")
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
