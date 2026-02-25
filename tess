@@ -1,3 +1,7 @@
+
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
 -- // 6. REFRESH & REPLACE TOGGLE (HAPUS TULISAN OPEN) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
@@ -51,8 +55,6 @@ task.spawn(function()
     
     print("Vanished Hub: Tombol OPEN telah dihapus dan diganti Icon Box!")
 end)
-
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
