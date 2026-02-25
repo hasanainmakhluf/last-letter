@@ -328,23 +328,18 @@ Window:OnProcessed(function()
     })
 end)
 
--- Memastikan UI muncul jika library gagal auto-render
+-- // 6. TOMBOL MINIMIZE STANDALONE (FORCE SHOW) // --
 task.spawn(function()
-    task.wait(0.5)
-    if Fluent.Minimized then
-        Fluent:Minimize() -- Toggle sekali untuk memancing kemunculan
-    end
-end)
-
--- // 6. TOMBOL MINIMIZE UNIVERSAL (FIXED) // --
-task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    -- Jangan pakai pcall rumit, langsung tembak ke tempat yang Delta suka
+    local TargetParent = game:GetService("CoreGui") 
     
-    local TargetParent = CoreGui
-    local s, e = pcall(function() local t = Instance.new("ScreenGui", CoreGui) t:Destroy() end)
-    if not s then TargetParent = PlayerGui end
+    -- Cek jika CoreGui bisa diakses, jika tidak lari ke PlayerGui
+    local success = pcall(function() return TargetParent.Name end)
+    if not success then
+        TargetParent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
 
+    -- Bersihkan sisa-sisa tombol lama
     if TargetParent:FindFirstChild("VanishedMobileToggle") then
         TargetParent.VanishedMobileToggle:Destroy()
     end
@@ -356,61 +351,40 @@ task.spawn(function()
     ScreenGui.Parent = TargetParent
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.IgnoreGuiInset = true 
+    ScreenGui.DisplayOrder = 999 -- Pastikan di atas GUI game
 
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     ImageButton.BorderSizePixel = 0
     ImageButton.AnchorPoint = Vector2.new(0.5, 0.5) 
-    ImageButton.Position = UDim2.new(0.5, 0, 0.08, 0) -- Sedikit lebih ke atas
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
+    -- Pindahkan posisi sedikit ke kanan agar tidak menutupi tombol chat roblox (0.15)
+    ImageButton.Position = UDim2.new(0.5, 0, 0.15, 0) 
+    ImageButton.Size = UDim2.new(0, 50, 0, 50)
     ImageButton.Image = "rbxassetid://85002796312935"
     ImageButton.Active = true
-    ImageButton.ZIndex = 1000
+    ImageButton.Draggable = true -- Gunakan fitur bawaan roblox agar hemat memory
+    ImageButton.ZIndex = 10000
 
+    -- Visual: Bulat & Border Putih
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = ImageButton
 
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Color3.fromRGB(255, 255, 255)
-    UIStroke.Thickness = 2
+    UIStroke.Thickness = 2.5
     UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
     UIStroke.Parent = ImageButton
 
-    -- // LOGIKA DRAG // --
-    local UserInputService = game:GetService("UserInputService")
-    local dragging, dragInput, dragStart, startPos
-
-    ImageButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = ImageButton.Position
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    ImageButton.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-
-    -- // FUNGSI KLIK (DENGAN DEBOUNCE) // --
-    local lastClick = 0
+    -- FUNGSI KLIK
     ImageButton.MouseButton1Click:Connect(function()
-        local now = tick()
-        if now - lastClick > 0.3 then -- Cegah spam klik yang bikin menu bug
-            lastClick = now
-            if Fluent then
-                Fluent:Minimize()
-            end
+        if Fluent then
+            Fluent:Minimize()
+        else
+            -- Jika Fluent belum siap tapi tombol diklik
+            warn("Vanished Hub: Menunggu Fluent Library...")
         end
     end)
+    
+    print("Vanished Hub: Icon Toggle Berhasil Dipaksa Muncul!")
 end)
