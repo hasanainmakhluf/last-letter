@@ -1,56 +1,55 @@
--- // 6. FINAL MOBILE TOGGLE (GANTI BOX PUTIH JADI ICON) // --
+-- // 6. REFRESH & REPLACE TOGGLE (HAPUS TULISAN OPEN) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
     
-    -- Hapus tombol "OPEN" putih yang lama agar tidak tumpang tindih
-    if RobloxGui:FindFirstChild("EmergencyV") then RobloxGui.EmergencyV:Destroy() end
-    if RobloxGui:FindFirstChild("VanishedMobileToggle") then RobloxGui.VanishedMobileToggle:Destroy() end
+    -- HAPUS PAKSA SEMUA TOMBOL LAMA (OPEN/V/DLL)
+    for _, child in pairs(RobloxGui:GetChildren()) do
+        if child.Name == "EmergencyV" or child.Name == "VanishedMobileToggle" or child.Name == "VanishedToggle" then
+            child:Destroy()
+        end
+    end
+    task.wait(0.1) -- Jeda sebentar agar sistem bersih
 
     local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
+    local ImageButton = Instance.new("ImageButton") -- PAKAI IMAGE BUKAN TEXT
 
     ScreenGui.Name = "VanishedMobileToggle"
     ScreenGui.Parent = RobloxGui 
     ScreenGui.IgnoreGuiInset = true 
     ScreenGui.DisplayOrder = 999999
 
-    -- Setting Visual Tombol (Ganti Putih jadi Gelap + Icon)
+    -- SETTING VISUAL (ICON BOX)
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Warna Gelap
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Background Gelap
     ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) -- Posisi di kiri atas
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) -- Ukuran Box
-    ImageButton.Image = "rbxassetid://85002796312935" -- Icon Box kamu
+    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
+    ImageButton.Image = "rbxassetid://85002796312935" -- ICON BOX
     ImageButton.Draggable = true 
     ImageButton.ZIndex = 1000000
 
-    -- Efek Bulat
-    local UICorner = Instance.new("UICorner")
+    -- Bulat & Border
+    local UICorner = Instance.new("UICorner", ImageButton)
     UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = ImageButton
 
-    -- Efek Border Putih Cantik
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 255, 255) -- Warna Border
+    local UIStroke = Instance.new("UIStroke", ImageButton)
+    UIStroke.Color = Color3.fromRGB(255, 255, 255)
     UIStroke.Thickness = 2
     UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
-    UIStroke.Parent = ImageButton
 
-    -- LOGIKA BUKA TUTUP GUI FLUENT
+    -- FUNGSI KLIK
     ImageButton.MouseButton1Click:Connect(function()
         if Fluent then
-            Fluent:Minimize() -- Panggil fungsi tutup/buka dari library
+            Fluent:Minimize()
         else
-            -- Jika library belum siap, cari manual foldernages
+            -- Cari Manual jika Fluent belum siap
             local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
                         game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if gui then
-                gui.Enabled = not gui.Enabled
-            end
+            if gui then gui.Enabled = not gui.Enabled end
         end
     end)
     
-    print("Vanished Hub: Icon Box Berhasil Menggantikan Tombol Putih!")
+    print("Vanished Hub: Tombol OPEN telah dihapus dan diganti Icon Box!")
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
