@@ -1,62 +1,66 @@
--- // 1. TOMBOL MANDIRI (VERSI INPUTBEGAN - ANTI GAGAL) // --
+-- // 1. TOMBOL FINAL (VERSI PLAYERGUI - ANTI GAGAL) // --
 task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    local RobloxGui = CoreGui:WaitForChild("RobloxGui")
+    local Player = game:GetService("Players").LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
     
-    -- Hapus tombol lama
-    if RobloxGui:FindFirstChild("VanishedMobileToggle") then
-        RobloxGui.VanishedMobileToggle:Destroy()
-    end
+    -- Hapus tombol lama jika ada di PlayerGui atau CoreGui
+    if PlayerGui:FindFirstChild("VanishedMobileToggle") then PlayerGui.VanishedMobileToggle:Destroy() end
+    if game:GetService("CoreGui"):FindFirstChild("VanishedMobileToggle") then game:GetService("CoreGui").VanishedMobileToggle:Destroy() end
 
-    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
+    local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.DisplayOrder = 999999
+    ScreenGui.Parent = PlayerGui -- Kita pindah ke PlayerGui
+    ScreenGui.DisplayOrder = 9999999
     ScreenGui.IgnoreGuiInset = true
 
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
+    local ImageButton = Instance.new("ImageButton")
+    ImageButton.Name = "ToggleButton"
+    ImageButton.Parent = ScreenGui
     ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Position = UDim2.new(0, 15, 0.5, -22) -- Posisi kiri tengah layar
+    ImageButton.Size = UDim2.new(0, 45, 0, 45)
+    ImageButton.Image = "rbxassetid://85002796312935"
     ImageButton.Active = true
-    ImageButton.Draggable = true 
+    ImageButton.Draggable = true -- Biar bisa digeser kalau ganggu
 
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Thickness = 2
+    local UICorner = Instance.new("UICorner", ImageButton)
+    UICorner.CornerRadius = UDim.new(0, 10)
 
-    -- FUNGSI TOGGLE (DIBUAT TERPISAH AGAR RAPI)
-    local function ToggleMenu()
+    local UIStroke = Instance.new("UIStroke", ImageButton)
+    UIStroke.Color = Color3.fromRGB(255, 255, 255)
+    UIStroke.Thickness = 2
+
+    -- FUNGSI TOGGLE (DIPERBAIKI)
+    local function DoToggle()
+        -- Cari UI Fluent di semua tempat yang mungkin
+        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                         PlayerGui:FindFirstChild("Fluent") or 
+                         game:GetService("CoreGui"):FindFirstChild("Fluent Gui")
+
         if _G.Fluent and _G.Fluent.Minimize then
-            _G.Fluent:Minimize()
-        else
-            -- Cari manual jika variabel belum siap
-            local target = CoreGui:FindFirstChild("Fluent") or 
-                           CoreGui:FindFirstChild("Fluent Gui") or 
-                           game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if target then
-                target.Enabled = not target.Enabled
-                if target:FindFirstChild("Main") then
-                    target.Main.Visible = target.Enabled
-                end
+            _G.Fluent:Minimize() -- Cara Elegan
+        elseif FluentUI then
+            -- Cara Paksa jika variabel nil
+            local Main = FluentUI:FindFirstChild("Main")
+            if Main then
+                Main.Visible = not Main.Visible
+            else
+                FluentUI.Enabled = not FluentUI.Enabled
             end
         end
     end
 
-    -- DETEKSI KLIK MENGGUNAKAN INPUTBEGAN (LEBIH SENSITIF UNTUK MOBILE)
-    ImageButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            ToggleMenu()
-        end
+    -- DETEKSI KLIK PALING SENSITIF
+    ImageButton.MouseButton1Down:Connect(function()
+        DoToggle()
     end)
 end)
 
--- // 2. LOAD LIBRARY & PENDAFTARAN GLOBAL // --
+-- // 2. LOAD LIBRARY // --
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-_G.Fluent = Fluent -- INI KUNCI AGAR TOMBOL DI ATAS BISA JALAN
+_G.Fluent = Fluent -- Menghubungkan ke tombol di atas
 
--- ... Lanjutkan Window:CreateWindow kamu ...
+-- ... Lanjut ke Window:CreateWindow kamu ...
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
 local Window = Fluent:CreateWindow({
