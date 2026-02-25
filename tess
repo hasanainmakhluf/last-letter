@@ -1,60 +1,62 @@
-
-
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
--- // 6. REFRESH & REPLACE TOGGLE (HAPUS TULISAN OPEN) // --
+-- // 6. REFRESH & REPLACE TOGGLE (VERSI FIX TOTAL) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
     
-    -- HAPUS PAKSA SEMUA TOMBOL LAMA (OPEN/V/DLL)
+    -- Bersihkan sisa-sisa tombol lama
     for _, child in pairs(RobloxGui:GetChildren()) do
         if child.Name == "EmergencyV" or child.Name == "VanishedMobileToggle" or child.Name == "VanishedToggle" then
             child:Destroy()
         end
     end
-    task.wait(0.1) -- Jeda sebentar agar sistem bersih
 
     local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton") -- PAKAI IMAGE BUKAN TEXT
+    local ImageButton = Instance.new("ImageButton")
 
     ScreenGui.Name = "VanishedMobileToggle"
     ScreenGui.Parent = RobloxGui 
     ScreenGui.IgnoreGuiInset = true 
     ScreenGui.DisplayOrder = 999999
 
-    -- SETTING VISUAL (ICON BOX)
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Background Gelap
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
     ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" -- ICON BOX
+    ImageButton.Image = "rbxassetid://85002796312935" 
     ImageButton.Draggable = true 
-    ImageButton.ZIndex = 1000000
+    ImageButton.Active = true -- Penting agar bisa diklik
 
-    -- Bulat & Border
     local UICorner = Instance.new("UICorner", ImageButton)
     UICorner.CornerRadius = UDim.new(0, 10)
 
     local UIStroke = Instance.new("UIStroke", ImageButton)
     UIStroke.Color = Color3.fromRGB(255, 255, 255)
     UIStroke.Thickness = 2
-    UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
+    UIStroke.Parent = ImageButton
 
-    -- FUNGSI KLIK
+    -- FUNGSI KLIK TANPA TERGANTUNG VARIABEL (DIRECT ACCESS)
     ImageButton.MouseButton1Click:Connect(function()
-        if Fluent then
-            Fluent:Minimize()
+        -- Cari folder Fluent di CoreGui (Tempat library Fluent naruh UI-nya)
+        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                         game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+        
+        if FluentUI then
+            -- Cari Main Frame di dalam Fluent
+            local MainFrame = FluentUI:FindFirstChild("Main")
+            if MainFrame then
+                MainFrame.Visible = not MainFrame.Visible
+            else
+                -- Jika struktur folder berbeda, toggle enabled-nya saja
+                FluentUI.Enabled = not FluentUI.Enabled
+            end
         else
-            -- Cari Manual jika Fluent belum siap
-            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                        game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if gui then gui.Enabled = not gui.Enabled end
+            -- Jika belum ada folder Fluent, berarti script belum selesai loading
+            warn("Vanished Hub: Menu belum ter-load sepenuhnya.")
         end
     end)
-    
-    print("Vanished Hub: Tombol OPEN telah dihapus dan diganti Icon Box!")
 end)
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
