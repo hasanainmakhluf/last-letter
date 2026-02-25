@@ -328,6 +328,14 @@ Window:OnProcessed(function()
     })
 end)
 
+-- Memastikan UI muncul jika library gagal auto-render
+task.spawn(function()
+    task.wait(0.5)
+    if Fluent.Minimized then
+        Fluent:Minimize() -- Toggle sekali untuk memancing kemunculan
+    end
+end)
+
 -- // 6. TOMBOL MINIMIZE UNIVERSAL (FIXED) // --
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
