@@ -327,84 +327,82 @@ Window:OnProcessed(function()
 end)
 
 -- // 6. TOMBOL MINIMIZE KHUSUS MOBILE // --
--- // 6. TOMBOL MINIMIZE FORCE APPEAR (Tanpa Deteksi) // --
-local Player = game.Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+-- // 6. TOMBOL MINIMIZE KHUSUS MOBILE (DELTA EXECUTOR OPTIMIZED) // --
+task.spawn(function()
+    -- Tunggu sebentar agar executor selesai memproses library utama
+    task.wait(1)
 
--- Fungsi Notifikasi untuk Testing
-local function notify(title, content)
-    Fluent:Notify({
-        Title = title,
-        Content = content,
-        Duration = 5
-    })
-end
-
--- Hapus tombol lama jika ada (agar tidak double saat re-exec)
-if PlayerGui:FindFirstChild("VanishedMobileToggle") then
-    PlayerGui.VanishedMobileToggle:Destroy()
-end
-
-local ScreenGui = Instance.new("ScreenGui")
-local ImageButton = Instance.new("ImageButton")
-
-ScreenGui.Name = "VanishedMobileToggle"
-ScreenGui.Parent = PlayerGui
-ScreenGui.ResetOnSpawn = false 
-ScreenGui.IgnoreGuiInset = true 
-ScreenGui.DisplayOrder = 9999 -- Angka tertinggi agar tidak tertutup apapun
-
-ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ImageButton.BorderSizePixel = 0
-ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
-
--- Posisi diturunkan lagi ke 0.2 agar benar-benar terlihat di bawah TopBar Roblox
-ImageButton.Position = UDim2.new(0.5, 0, 0.2, 0) 
-ImageButton.Size = UDim2.new(0, 55, 0, 55) -- Ukuran diperbesar sedikit
-ImageButton.Image = "rbxassetid://85002796312935" 
-ImageButton.Active = true
-ImageButton.ZIndex = 10000
-
--- Efek Bulat & Stroke (Garis Tepi)
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 15)
-UICorner.Parent = ImageButton
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(255, 255, 255)
-UIStroke.Thickness = 3
-UIStroke.Parent = ImageButton
-
--- // LOGIKA DRAG MULUS // --
-local UserInputService = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
-
-ImageButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = ImageButton.Position
+    local CoreGui = game:GetService("CoreGui")
+    
+    -- Hapus tombol lama jika ada di CoreGui atau PlayerGui
+    if CoreGui:FindFirstChild("VanishedMobileToggle") then
+        CoreGui.VanishedMobileToggle:Destroy()
     end
-end)
+    
+    local ScreenGui = Instance.new("ScreenGui")
+    local ImageButton = Instance.new("ImageButton")
 
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+    ScreenGui.Name = "VanishedMobileToggle"
+    -- Kita coba taruh di CoreGui. Jika executor Delta-mu memblokir CoreGui,
+    -- ganti baris bawah ini menjadi: ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
+    ScreenGui.Parent = CoreGui 
+    ScreenGui.IgnoreGuiInset = true 
+    ScreenGui.DisplayOrder = 999999 -- Nilai maksimal
 
-ImageButton.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
+    ImageButton.Parent = ScreenGui
+    ImageButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    ImageButton.BorderSizePixel = 0
+    ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
 
--- Fungsi Klik
-ImageButton.MouseButton1Click:Connect(function()
-    Fluent:Minimize() 
-end)
+    -- Posisi diatur lebih rendah (0.25) agar tidak bertabrakan dengan Notch/Kamera HP
+    ImageButton.Position = UDim2.new(0.5, 0, 0.25, 0) 
+    ImageButton.Size = UDim2.new(0, 50, 0, 50) 
+    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Active = true
+    ImageButton.ZIndex = 1000000
 
--- Jalankan notifikasi agar kamu tahu script sampai di sini
-notify("Vanished Hub", "Tombol Mobile Dipaksa Muncul!")
+    -- Membuat Border & Bulat
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 15)
+    UICorner.Parent = ImageButton
+
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(255, 255, 255)
+    UIStroke.Thickness = 2.5
+    UIStroke.Parent = ImageButton
+
+    -- // LOGIKA DRAG MULUS // --
+    local UserInputService = game:GetService("UserInputService")
+    local dragging, dragInput, dragStart, startPos
+
+    ImageButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = ImageButton.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    ImageButton.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    -- // KLIK UNTUK MINIMIZE // --
+    ImageButton.MouseButton1Click:Connect(function()
+        if Fluent then
+            Fluent:Minimize() 
+        end
+    end)
+
+    -- Notifikasi sederhana tanpa Fluent (untuk cek apakah script jalan)
+    print("Vanished Hub: Tombol Toggle Berhasil Dimuat!")
+end)
