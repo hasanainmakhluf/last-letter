@@ -327,11 +327,23 @@ Window:OnProcessed(function()
 end)
 
 -- // 6. TOMBOL MINIMIZE KHUSUS MOBILE // --
--- // 6. TOMBOL MINIMIZE KHUSUS PORTRAIT (FORCE APPEAR) // --
+-- // LOGIKA FORCE NOTIFICATION // --
+local function notify(title, content)
+    Fluent:Notify({
+        Title = title,
+        Content = content,
+        Duration = 5
+    })
+end
+
+-- // 6. TOMBOL MINIMIZE KHUSUS PORTRAIT (VERSI TERKUAT) // --
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- Hapus tombol lama jika ada (biar nggak double saat re-exec)
+-- Notifikasi bahwa script tombol mulai dimuat
+notify("Vanished Hub", "Memasang tombol mobile...")
+
+-- Hapus tombol lama agar tidak menumpuk
 if PlayerGui:FindFirstChild("VanishedMobileToggle") then
     PlayerGui.VanishedMobileToggle:Destroy()
 end
@@ -342,41 +354,34 @@ local ImageButton = Instance.new("ImageButton")
 ScreenGui.Name = "VanishedMobileToggle"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false 
-ScreenGui.IgnoreGuiInset = true -- Mengabaikan bar notifikasi atas (sangat penting untuk Portrait)
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.IgnoreGuiInset = true 
+ScreenGui.DisplayOrder = 999 -- Memastikan berada di lapisan paling depan
 
 ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ImageButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 ImageButton.BorderSizePixel = 0
 
--- // POSISI KHUSUS PORTRAIT (DI TENGAH ATAS) // --
+-- // POSISI TENGAH AGAK BAWAH (Agar tidak tertutup UI game atas) // --
 ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
--- Di Portrait, 0.5 X adalah tengah. 0.07 Y adalah sedikit di bawah poni/notch HP.
-ImageButton.Position = UDim2.new(0.5, 0, 0.07, 0) 
-ImageButton.Size = UDim2.new(0, 50, 0, 50) -- Ukuran sedikit diperbesar agar mudah ditekan
+ImageButton.Position = UDim2.new(0.5, 0, 0.15, 0) -- Diturunkan ke 0.15 agar tidak tertutup notifikasi
+ImageButton.Size = UDim2.new(0, 50, 0, 50) 
 ImageButton.Image = "rbxassetid://85002796312935" 
 ImageButton.Active = true
-ImageButton.ZIndex = 100
+ImageButton.ZIndex = 1000
 
--- Efek Bulat & Stroke
+-- Efek Bulat & Stroke Putih Terang
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = ImageButton
 
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Color = Color3.fromRGB(255, 255, 255)
-UIStroke.Thickness = 2
-UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
+UIStroke.Thickness = 3 -- Stroke ditebalkan agar terlihat
 UIStroke.Parent = ImageButton
 
--- // LOGIKA DRAG MULUS // --
+-- Logika Drag Mulus
 local UserInputService = game:GetService("UserInputService")
 local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
 
 ImageButton.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -386,23 +391,23 @@ ImageButton.InputBegan:Connect(function(input)
     end
 end)
 
-ImageButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        ImageButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
+ImageButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
     end
 end)
 
 -- Fungsi Klik
 ImageButton.MouseButton1Click:Connect(function()
-    if Fluent then
-        Fluent:Minimize() 
-    end
+    notify("System", "Menu Toggled!")
+    Fluent:Minimize() 
 end)
 
-print("✅ Force Toggle Mobile Spawned!")
+notify("Success", "Tombol Mobile Muncul di Tengah Atas!")
