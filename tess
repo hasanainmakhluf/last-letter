@@ -1,3 +1,44 @@
+-- // 1. TOMBOL HARUS LAHIR DULUAN (PALING ATAS) // --
+task.spawn(function()
+    local p = game.Players.LocalPlayer
+    local pg = p:WaitForChild("PlayerGui")
+    
+    -- Kita coba taruh di PlayerGui saja karena Delta lebih stabil di sini
+    if pg:FindFirstChild("VanishedToggle") then pg.VanishedToggle:Destroy() end
+
+    local sg = Instance.new("ScreenGui", pg)
+    sg.Name = "VanishedToggle"
+    sg.ResetOnSpawn = false
+    sg.DisplayOrder = 999999 -- Sangat tinggi
+
+    local btn = Instance.new("TextButton", sg)
+    btn.Size = UDim2.new(0, 50, 0, 50)
+    btn.Position = UDim2.new(0, 20, 0.4, 0) -- Di sebelah kiri tengah agar terlihat
+    btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- WARNA MERAH BIAR KELIHATAN JELAS
+    btn.Text = "V"
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.Offset
+    btn.TextSize = 30
+    btn.Draggable = true
+
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(1, 0) -- Buat jadi bulat
+
+    btn.MouseButton1Click:Connect(function()
+        -- Cari UI Fluent secara paksa di CoreGui atau PlayerGui
+        local f1 = game.CoreGui:FindFirstChild("Fluent")
+        local f2 = pg:FindFirstChild("Fluent")
+        local target = f1 or f2
+        
+        if target then
+            target.Enabled = not target.Enabled
+        else
+            print("Menu belum siap!")
+        end
+    end)
+    print("Tombol V Merah Berhasil Dibuat!")
+end)
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
@@ -10,8 +51,6 @@ local Window = Fluent:CreateWindow({
     Theme = "Darker",
     MinimizeKey = Enum.KeyCode.RightControl
 })
-
-Fluent.Minimized = false
 
 -- 1. DAFTARKAN SEMUA TAB
 local Tabs = {
@@ -328,59 +367,3 @@ Window:OnProcessed(function()
     })
 end)
 
--- // 6. TOMBOL TOGGLE MANDIRI (ANTI-WAIT) // --
-local function CreateMobileToggle()
-    local TargetParent = game:GetService("CoreGui")
-    local success = pcall(function() return TargetParent.Name end)
-    if not success then TargetParent = game:GetService("Players").LocalPlayer.PlayerGui end
-
-    -- Hapus yang lama jika ada
-    if TargetParent:FindFirstChild("VanishedToggle") then
-        TargetParent.VanishedToggle:Destroy()
-    end
-
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "VanishedToggle"
-    ScreenGui.Parent = TargetParent
-    ScreenGui.IgnoreGuiInset = true
-    ScreenGui.DisplayOrder = 9999
-
-    local Button = Instance.new("ImageButton")
-    Button.Name = "MainButton"
-    Button.Parent = ScreenGui
-    Button.Size = UDim2.new(0, 50, 0, 50)
-    Button.Position = UDim2.new(0.1, 0, 0.15, 0) -- Posisi kiri atas agar aman
-    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Button.Image = "rbxassetid://85002796312935"
-    Button.Active = true
-    Button.Draggable = true -- Mandiri drag
-
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = Button
-
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Thickness = 2
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Parent = Button
-
-    -- LOGIKA KLIK MANDIRI
-    Button.MouseButton1Click:Connect(function()
-        -- Cari UI Fluent secara manual di manapun dia berada
-        local FluentUI = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-        
-        if FluentUI then
-            FluentUI.Enabled = not FluentUI.Enabled
-        else
-            -- Jika Fluent belum di-load sama sekali
-            local StarterGui = game:GetService("StarterGui")
-            StarterGui:SetCore("SendNotification", {
-                Title = "Vanished Hub",
-                Text = "Menu belum siap, tunggu sebentar...",
-                Duration = 2
-            })
-        end
-    end)
-end
-
-CreateMobileToggle()
