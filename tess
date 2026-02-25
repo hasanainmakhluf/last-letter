@@ -1,44 +1,41 @@
--- // 1. TOMBOL MANDIRI (BARIS 1 - JAMIN MUNCUL) // --
+-- // 1. TOMBOL MANDIRI (TARUH DI PALING ATAS) // --
 task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    -- Tunggu sebentar agar executor tidak shock
-    task.wait(2)
-
-    -- Pembersihan tombol lama
-    for _, v in pairs(CoreGui:GetChildren()) do
-        if v.Name == "VanishedMobileToggle" then v:Destroy() end
+    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    
+    -- Bersihkan sisa tombol lama
+    for _, child in pairs(RobloxGui:GetChildren()) do
+        if child.Name == "VanishedMobileToggle" then child:Destroy() end
     end
 
-    local sg = Instance.new("ScreenGui", CoreGui)
-    sg.Name = "VanishedMobileToggle"
-    sg.DisplayOrder = 9999999
-    sg.IgnoreGuiInset = true
+    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
+    ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.DisplayOrder = 999999
+    ScreenGui.IgnoreGuiInset = true
 
-    local btn = Instance.new("ImageButton", sg)
-    btn.Size = UDim2.new(0, 45, 0, 45)
-    btn.Position = UDim2.new(0.1, 0, 0.2, 0) -- Posisi agak atas samping kiri
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.Image = "rbxassetid://85002796312935"
-    btn.Active = true
-    btn.Draggable = true 
+    local ImageButton = Instance.new("ImageButton", ScreenGui)
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
+    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Draggable = true 
+    ImageButton.Active = true
 
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
-    local st = Instance.new("UIStroke", btn)
-    st.Color = Color3.new(1, 1, 1)
-    st.Thickness = 2
+    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", ImageButton)
+    Stroke.Color = Color3.fromRGB(255, 255, 255)
+    Stroke.Thickness = 2
 
-    -- LOGIKA KLIK (LANGSUNG TEMBAK KE FOLDER)
-    btn.MouseButton1Down:Connect(function()
-        -- Cari UI Fluent (Library Fluent biasanya membuat ScreenGui bernama 'Fluent' atau 'Fluent Gui')
-        local target = CoreGui:FindFirstChild("Fluent") or CoreGui:FindFirstChild("Fluent Gui") or 
+    -- LOGIKA KLIK MANUAL (TANPA VARIABEL)
+    ImageButton.MouseButton1Click:Connect(function()
+        local Target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
                        game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
         
-        if target then
-            local main = target:FindFirstChild("Main")
-            if main then
-                main.Visible = not main.Visible
+        if Target then
+            local Main = Target:FindFirstChild("Main")
+            if Main then
+                Main.Visible = not Main.Visible
             else
-                target.Enabled = not target.Enabled
+                Target.Enabled = not Target.Enabled
             end
         end
     end)
