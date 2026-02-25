@@ -185,6 +185,7 @@ siklisasi
 atelokolagen
 takbengang
 ahuni
+yospan
 ilmuan
 refraktori
 inam
