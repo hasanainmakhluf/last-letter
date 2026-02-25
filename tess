@@ -1,44 +1,55 @@
--- // 1. TOMBOL MANDIRI (TARUH DI PALING ATAS) // --
+-- // 6. REFRESH & REPLACE TOGGLE (HAPUS TULISAN OPEN) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
     
-    -- Bersihkan sisa tombol lama
+    -- HAPUS PAKSA SEMUA TOMBOL LAMA (OPEN/V/DLL)
     for _, child in pairs(RobloxGui:GetChildren()) do
-        if child.Name == "VanishedMobileToggle" then child:Destroy() end
+        if child.Name == "EmergencyV" or child.Name == "VanishedMobileToggle" or child.Name == "VanishedToggle" then
+            child:Destroy()
+        end
     end
+    task.wait(0.1) -- Jeda sebentar agar sistem bersih
 
-    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
+    local ScreenGui = Instance.new("ScreenGui")
+    local ImageButton = Instance.new("ImageButton") -- PAKAI IMAGE BUKAN TEXT
+
     ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.Parent = RobloxGui 
+    ScreenGui.IgnoreGuiInset = true 
     ScreenGui.DisplayOrder = 999999
-    ScreenGui.IgnoreGuiInset = true
 
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    -- SETTING VISUAL (ICON BOX)
+    ImageButton.Parent = ScreenGui
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Background Gelap
+    ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
     ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Image = "rbxassetid://85002796312935" -- ICON BOX
     ImageButton.Draggable = true 
-    ImageButton.Active = true
+    ImageButton.ZIndex = 1000000
 
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Thickness = 2
+    -- Bulat & Border
+    local UICorner = Instance.new("UICorner", ImageButton)
+    UICorner.CornerRadius = UDim.new(0, 10)
 
-    -- LOGIKA KLIK MANUAL (TANPA VARIABEL)
+    local UIStroke = Instance.new("UIStroke", ImageButton)
+    UIStroke.Color = Color3.fromRGB(255, 255, 255)
+    UIStroke.Thickness = 2
+    UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
+
+    -- FUNGSI KLIK
     ImageButton.MouseButton1Click:Connect(function()
-        local Target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                       game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-        
-        if Target then
-            local Main = Target:FindFirstChild("Main")
-            if Main then
-                Main.Visible = not Main.Visible
-            else
-                Target.Enabled = not Target.Enabled
-            end
+        if Fluent then
+            Fluent:Minimize()
+        else
+            -- Cari Manual jika Fluent belum siap
+            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                        game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            if gui then gui.Enabled = not gui.Enabled end
         end
     end)
+    
+    print("Vanished Hub: Tombol OPEN telah dihapus dan diganti Icon Box!")
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
