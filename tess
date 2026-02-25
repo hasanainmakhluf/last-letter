@@ -1,48 +1,41 @@
--- // 1. TOMBOL MANDIRI VERSI SAPU JAGAT (PASTI JALAN) // --
+-- // 1. TOMBOL MANDIRI (TARUH DI PALING ATAS) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
     
-    -- Hapus tombol lama
-    for _, v in pairs(RobloxGui:GetChildren()) do
-        if v.Name == "VanishedMobileToggle" then v:Destroy() end
+    -- Bersihkan sisa tombol lama
+    for _, child in pairs(RobloxGui:GetChildren()) do
+        if child.Name == "VanishedMobileToggle" then child:Destroy() end
     end
 
     local ScreenGui = Instance.new("ScreenGui", RobloxGui)
     ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.DisplayOrder = 9999999
+    ScreenGui.DisplayOrder = 999999
     ScreenGui.IgnoreGuiInset = true
 
     local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0)
     ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Image = "rbxassetid://85002796312935"
+    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
+    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Draggable = true 
     ImageButton.Active = true
-    ImageButton.Draggable = true
 
     Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
     local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.new(1, 1, 1)
+    Stroke.Color = Color3.fromRGB(255, 255, 255)
     Stroke.Thickness = 2
 
-    -- LOGIKA KLIK SAPU JAGAT
+    -- LOGIKA KLIK MANUAL (TANPA VARIABEL)
     ImageButton.MouseButton1Click:Connect(function()
-        -- Cari di CoreGui & PlayerGui
-        local Parents = {game:GetService("CoreGui"), game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")}
+        local Target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                       game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
         
-        for _, p in pairs(Parents) do
-            for _, gui in pairs(p:GetChildren()) do
-                -- Logika: Jika ini ScreenGui, bukan buatan kita, dan punya anak bernama "Main" (khas Fluent)
-                if gui:IsA("ScreenGui") and gui.Name ~= "VanishedMobileToggle" then
-                    if gui:FindFirstChild("Main") or gui.Name == "Fluent" then
-                        gui.Enabled = not gui.Enabled
-                        -- Jika Enabled tidak mempan, paksa lewat Visible frame utamanya
-                        local mainFrame = gui:FindFirstChild("Main")
-                        if mainFrame then
-                            mainFrame.Visible = gui.Enabled
-                        end
-                    end
-                end
+        if Target then
+            local Main = Target:FindFirstChild("Main")
+            if Main then
+                Main.Visible = not Main.Visible
+            else
+                Target.Enabled = not Target.Enabled
             end
         end
     end)
