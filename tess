@@ -4,65 +4,29 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
-local Window = Fluent:CreateWindow({
+-- Simpan ke variabel global agar tombol bisa akses
+_G.VanishedWindow = Fluent:CreateWindow({
     Title = "Vanished Hub",
     SubTitle = "v1.0",
-    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
-    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
+    TabWidth = isMobile and 140 or 160,
+    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460),
     Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.RightControl
+    -- MinimizeKey tidak usah dipusingkan kalau keyboardnya rusak
 })
 
-_G.Fluent = Fluent
-
--- // 6. REFRESH & REPLACE TOGGLE (DIRECT CALL VERSION) // --
-task.spawn(function()
-    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
-    
-    -- Pembersihan tombol lama
-    for _, child in pairs(RobloxGui:GetChildren()) do
-        if child.Name == "VanishedMobileToggle" then child:Destroy() end
-    end
-    task.wait(0.1)
-
-    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
-    ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.IgnoreGuiInset = true 
-    ScreenGui.DisplayOrder = 999999
-
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
-    ImageButton.Draggable = true 
-    ImageButton.Active = true
-
-    local UICorner = Instance.new("UICorner", ImageButton)
-    UICorner.CornerRadius = UDim.new(0, 10)
-
-    local UIStroke = Instance.new("UIStroke", ImageButton)
-    UIStroke.Color = Color3.fromRGB(255, 255, 255)
-    UIStroke.Thickness = 2
-
-    -- // FUNGSI KLIK: PANGGIL PAKSA FUNGSI FLUENT // --
-    ImageButton.MouseButton1Down:Connect(function()
-        if _G.Fluent then
-            -- Memanggil fungsi Minimize bawaan Fluent secara langsung
-            _G.Fluent:Minimize()
+ImageButton.MouseButton1Down:Connect(function()
+        -- Kita tidak panggil RightControl, kita langsung suruh Window-nya mengecil
+        if _G.VanishedWindow then
+            _G.VanishedWindow:Minimize() 
         else
-            -- Jika variabel global belum siap, cari GUI secara manual (Sapu Jagat)
-            local target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                           game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if target then
-                target.Enabled = not target.Enabled
-                if target:FindFirstChild("Main") then
-                    target.Main.Visible = target.Enabled
-                end
+            -- Jika cara halus gagal, kita pakai cara kasar (cari GUI-nya)
+            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                        game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            if gui then
+                gui.Enabled = not gui.Enabled
             end
         end
     end)
-end)
 
 -- 1. DAFTARKAN SEMUA TAB
 local Tabs = {
