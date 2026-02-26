@@ -4,29 +4,75 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 
--- Simpan ke variabel global agar tombol bisa akses
-_G.VanishedWindow = Fluent:CreateWindow({
+local Window = Fluent:CreateWindow({
     Title = "Vanished Hub",
     SubTitle = "v1.0",
-    TabWidth = isMobile and 140 or 160,
-    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460),
+    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
+    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
     Theme = "Darker",
-    -- MinimizeKey tidak usah dipusingkan kalau keyboardnya rusak
+    MinimizeKey = Enum.KeyCode.RightControl
 })
 
-ImageButton.MouseButton1Down:Connect(function()
-        -- Kita tidak panggil RightControl, kita langsung suruh Window-nya mengecil
-        if _G.VanishedWindow then
-            _G.VanishedWindow:Minimize() 
-        else
-            -- Jika cara halus gagal, kita pakai cara kasar (cari GUI-nya)
-            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                        game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if gui then
-                gui.Enabled = not gui.Enabled
+-- Beri nama unik pada folder GUI Fluent agar mudah dicari tombol
+local GuiParent = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+if GuiParent then
+    GuiParent.Name = "VanishedGui"
+end
+
+-- // 6. TOMBOL MANUAL TOGGLE (ANTI-BUG EMULATOR) // --
+task.spawn(function()
+    local CoreGui = game:GetService("CoreGui")
+    local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Bersihkan tombol lama
+    local function clean(p)
+        for _, v in pairs(p:GetChildren()) do
+            if v.Name == "VanishedMobileToggle" then v:Destroy() end
+        end
+    end
+    clean(CoreGui) clean(PlayerGui)
+
+    local ScreenGui = Instance.new("ScreenGui", CoreGui)
+    ScreenGui.Name = "VanishedMobileToggle"
+    ScreenGui.IgnoreGuiInset = true 
+    ScreenGui.DisplayOrder = 9999999
+
+    local ImageButton = Instance.new("ImageButton", ScreenGui)
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ImageButton.Position = UDim2.new(0, 15, 0.5, -22) 
+    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
+    ImageButton.Image = "rbxassetid://85002796312935" 
+    ImageButton.Draggable = true 
+    ImageButton.Active = true
+
+    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", ImageButton)
+    Stroke.Color = Color3.new(1, 1, 1)
+    Stroke.Thickness = 2
+
+    -- // FUNGSI TOGGLE PAKSA (MANUAL) // --
+    ImageButton.MouseButton1Down:Connect(function()
+        -- Cari folder GUI yang kita ganti namanya tadi
+        local target = CoreGui:FindFirstChild("VanishedGui") or 
+                       PlayerGui:FindFirstChild("VanishedGui") or
+                       CoreGui:FindFirstChild("Fluent") or 
+                       PlayerGui:FindFirstChild("Fluent")
+
+        if target then
+            -- Fluent punya frame utama namanya "Main"
+            local mainFrame = target:FindFirstChild("Main")
+            if mainFrame then
+                mainFrame.Visible = not mainFrame.Visible
+                print("Vanished Hub: Toggle Berhasil!")
+            else
+                -- Jika Main tidak ketemu, toggle seluruh ScreenGui
+                target.Enabled = not target.Enabled
             end
+        else
+            warn("Vanished Hub: Folder GUI tidak ditemukan!")
         end
     end)
+end)
 
 -- 1. DAFTARKAN SEMUA TAB
 local Tabs = {
