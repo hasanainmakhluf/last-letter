@@ -156,24 +156,33 @@ MainTab:Toggle({
     Value = false,
     Callback = function(v)
         _G.UnblockActive = v
+        local CAS = game:GetService("ContextActionService")
+        local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+
         if not v then
-            -- Jika dimatikan saat sedang main, langsung paksa block
-            if IsMatchActive then
-                local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-                if hum then hum.JumpPower = 0 hum.WalkSpeed = 0 end
+            -- // JIKA DI-OFF-KAN // --
+            -- Paksa Bind kembali aksi blokir agar Spasi tidak berfungsi
+            CAS:BindActionAtPriority("BlockJump", function() 
+                return Enum.ContextActionResult.Sink 
+            end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Space)
+            
+            if hum then 
+                hum.JumpPower = 0 
+                hum.WalkSpeed = 0 
+                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
             end
         else
+            -- // JIKA DI-ON-KAN // --
+            CAS:UnbindAction("BlockJump") -- Lepas blokir spasi
             task.spawn(function()
-                local CAS = game:GetService("ContextActionService")
                 while _G.UnblockActive do
-                    CAS:UnbindAction("BlockJump")
-                    local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then 
-                        hum.JumpPower = 50 
-                        hum.WalkSpeed = 16 
-                        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                    local h = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+                    if h then 
+                        h.JumpPower = 50 
+                        h.WalkSpeed = 16 
+                        h:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
                     end
-                    task.wait(0.2)
+                    task.wait(0.1)
                 end
             end)
         end
@@ -202,9 +211,19 @@ Window:EditOpenButton({
 
 -- // 9. EVENT HANDLER // --
 local function resetJump()
-    if _G.UnblockActive then return end -- Jangan reset kalau unblock lagi aktif
+    -- Jika Unblock AKTIF, jangan di-reset ke 0
+    if _G.UnblockActive then return end 
+    
     local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-    if hum then hum.JumpPower = 0 hum.WalkSpeed = 0 end -- Default mati saat main
+    if hum then 
+        hum.JumpPower = 0 
+        hum.WalkSpeed = 0 
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+        -- Paksa block spasi lagi buat jaga-jaga
+        game:GetService("ContextActionService"):BindActionAtPriority("BlockJump", function() 
+            return Enum.ContextActionResult.Sink 
+        end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Space)
+    end
 end
 
 MatchUIEvent.OnClientEvent:Connect(function(action, value)
@@ -212,9 +231,17 @@ MatchUIEvent.OnClientEvent:Connect(function(action, value)
         CurrentPrefix = tostring(value):lower()
     elseif action == "ShowMatchUI" then
         IsMatchActive = true
+        if not _G.UnblockActive then resetJump() end -- Langsung block pas UI muncul
     elseif action == "HideMatchUI" or action == "Eliminated" then
         IsMatchActive = false
-        if not _G.UnblockActive then resetJump() end
+        -- Saat mati/selesai, biarkan player bisa gerak lagi (tergantung mau lo gimana)
+        local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then 
+            hum.JumpPower = 50 
+            hum.WalkSpeed = 16 
+            hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+            game:GetService("ContextActionService"):UnbindAction("BlockJump")
+        end
     elseif action == "StartTurn" then
         MyTurnActive = true
         if KamusReady and AutoAns.Value then task.spawn(executeAutoInput) end
