@@ -1,17 +1,18 @@
--- // 6. REFRESH & REPLACE TOGGLE (HAPUS TULISAN OPEN) // --
+-- // 6. REFRESH & REPLACE TOGGLE (DENGAN SIMULASI RIGHT CTRL) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
+    local VIM = game:GetService("VirtualInputManager")
     
-    -- HAPUS PAKSA SEMUA TOMBOL LAMA (OPEN/V/DLL)
+    -- HAPUS PAKSA SEMUA TOMBOL LAMA
     for _, child in pairs(RobloxGui:GetChildren()) do
         if child.Name == "EmergencyV" or child.Name == "VanishedMobileToggle" or child.Name == "VanishedToggle" then
             child:Destroy()
         end
     end
-    task.wait(0.1) -- Jeda sebentar agar sistem bersih
+    task.wait(0.1)
 
     local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton") -- PAKAI IMAGE BUKAN TEXT
+    local ImageButton = Instance.new("ImageButton")
 
     ScreenGui.Name = "VanishedMobileToggle"
     ScreenGui.Parent = RobloxGui 
@@ -20,12 +21,13 @@ task.spawn(function()
 
     -- SETTING VISUAL (ICON BOX)
     ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Background Gelap
+    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
     ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" -- ICON BOX
+    ImageButton.Image = "rbxassetid://85002796312935" 
     ImageButton.Draggable = true 
+    ImageButton.Active = true -- Pastikan Active agar bisa di-klik
     ImageButton.ZIndex = 1000000
 
     -- Bulat & Border
@@ -37,19 +39,20 @@ task.spawn(function()
     UIStroke.Thickness = 2
     UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
 
-    -- FUNGSI KLIK
+    -- // FUNGSI KLIK: SIMULASI TEKAN RIGHT CTRL // --
     ImageButton.MouseButton1Click:Connect(function()
-        if Fluent then
-            Fluent:Minimize()
-        else
-            -- Cari Manual jika Fluent belum siap
-            local gui = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
-                        game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-            if gui then gui.Enabled = not gui.Enabled end
-        end
+        -- Simulasi menekan tombol Right Control secara fisik
+        VIM:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+        task.wait(0.01)
+        VIM:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
+        
+        -- Efek visual feedback (tombol berkedip saat diklik)
+        ImageButton.ImageTransparency = 0.5
+        task.wait(0.1)
+        ImageButton.ImageTransparency = 0
     end)
     
-    print("Vanished Hub: Tombol OPEN telah dihapus dan diganti Icon Box!")
+    print("Vanished Hub: Tombol Icon Box siap dengan simulasi RightCtrl!")
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
