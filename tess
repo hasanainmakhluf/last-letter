@@ -1,3 +1,18 @@
+
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local isMobile = game:GetService("UserInputService").TouchEnabled
+
+local Window = Fluent:CreateWindow({
+    Title = "Vanished Hub",
+    SubTitle = "v1.0",
+    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
+    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.RightControl
+})
+
 -- // 6. REFRESH & REPLACE TOGGLE (DENGAN SIMULASI RIGHT CTRL) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
@@ -54,19 +69,6 @@ task.spawn(function()
     
     print("Vanished Hub: Tombol Icon Box siap dengan simulasi RightCtrl!")
 end)
-
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
-local isMobile = game:GetService("UserInputService").TouchEnabled
-
-local Window = Fluent:CreateWindow({
-    Title = "Vanished Hub",
-    SubTitle = "v1.0",
-    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
-    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
-    Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.RightControl
-})
 
 -- 1. DAFTARKAN SEMUA TAB
 local Tabs = {
