@@ -23,7 +23,8 @@ local AboutTab = Window:Tab({ Title = "About", Icon = "info" })
 
 -- // 3. DATABASE & VARIABLES // --
 local Dictionary, UsedWords, Blacklist = {}, {}, {}
-local KamusReady, MyTurnActive, IsMatchActive = false, false, false -- Tambah IsMatchActive
+local KamusReady, MyTurnActive = false, false
+local isPlaying = false -- Sesuai variabel v_u_29 di decompiler
 local PriorityLetter, CurrentPrefix = "", ""
 
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -36,8 +37,8 @@ local ResultUIEvent = ReplicatedStorage.Remotes:WaitForChild("ResultUI")
 task.spawn(function()
     local AuraRemote = ReplicatedStorage:FindFirstChild("Aura_RF", true)
     if AuraRemote then
-        AuraRemote:InvokeServer("EquipAura", "Petals")
-        WindUI:Notify({ Title = "Aura Active", Content = "Petals Aura equipped!", Duration = 5 })
+         AuraRemote:InvokeServer("EquipAura", "Petals")
+         WindUI:Notify({ Title = "Aura Active", Content = "Petals Aura equipped!", Duration = 5 })
     end
 end)
 
@@ -157,25 +158,28 @@ MainTab:Toggle({
     Callback = function(v)
         _G.UnblockActive = v
         local CAS = game:GetService("ContextActionService")
-        local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-
+        
         if not v then
-            -- // JIKA DI-OFF-KAN // --
-            -- Paksa Bind kembali aksi blokir agar Spasi tidak berfungsi
-            CAS:BindActionAtPriority("BlockJump", function() 
-                return Enum.ContextActionResult.Sink 
-            end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Space)
-            
-            if hum then 
-                hum.JumpPower = 0 
-                hum.WalkSpeed = 0 
-                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+            -- JIKA OFF: Cek apakah sedang bermain
+            if isPlaying then
+                -- Bind dengan priority 10000 agar menang melawan script game
+                CAS:BindActionAtPriority("VanishedBlock", function() 
+                    return Enum.ContextActionResult.Sink 
+                end, false, 10000, Enum.KeyCode.Space)
+                
+                local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+                if hum then 
+                    hum.JumpPower = 0 
+                    hum.WalkSpeed = 0 
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+                end
             end
         else
-            -- // JIKA DI-ON-KAN // --
-            CAS:UnbindAction("BlockJump") -- Lepas blokir spasi
+            -- JIKA ON: Lepas blokir
+            CAS:UnbindAction("VanishedBlock")
             task.spawn(function()
                 while _G.UnblockActive do
+                    CAS:UnbindAction("BlockJump") -- Unbind aksi bawaan game jika ada
                     local h = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
                     if h then 
                         h.JumpPower = 50 
@@ -210,48 +214,53 @@ Window:EditOpenButton({
 })
 
 -- // 9. EVENT HANDLER // --
-local function resetJump()
-    -- Jika Unblock AKTIF, jangan di-reset ke 0
+local function forceBlock()
     if _G.UnblockActive then return end 
-    
     local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
     if hum then 
         hum.JumpPower = 0 
         hum.WalkSpeed = 0 
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-        -- Paksa block spasi lagi buat jaga-jaga
-        game:GetService("ContextActionService"):BindActionAtPriority("BlockJump", function() 
-            return Enum.ContextActionResult.Sink 
-        end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Space)
     end
+    game:GetService("ContextActionService"):BindActionAtPriority("VanishedBlock", function() 
+        return Enum.ContextActionResult.Sink 
+    end, false, 10000, Enum.KeyCode.Space)
 end
 
 MatchUIEvent.OnClientEvent:Connect(function(action, value)
     if action == "UpdateServerLetter" then 
         CurrentPrefix = tostring(value):lower()
     elseif action == "ShowMatchUI" then
-        IsMatchActive = true
-        if not _G.UnblockActive then resetJump() end -- Langsung block pas UI muncul
+        isPlaying = true
+        if not _G.UnblockActive then forceBlock() end 
     elseif action == "HideMatchUI" or action == "Eliminated" then
-        IsMatchActive = false
-        -- Saat mati/selesai, biarkan player bisa gerak lagi (tergantung mau lo gimana)
+        isPlaying = false
+        game:GetService("ContextActionService"):UnbindAction("VanishedBlock")
         local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
         if hum then 
             hum.JumpPower = 50 
             hum.WalkSpeed = 16 
             hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-            game:GetService("ContextActionService"):UnbindAction("BlockJump")
         end
     elseif action == "StartTurn" then
         MyTurnActive = true
         if KamusReady and AutoAns.Value then task.spawn(executeAutoInput) end
     elseif action == "EndTurn" then
         MyTurnActive = false
-        if not _G.UnblockActive then resetJump() end
+        if isPlaying and not _G.UnblockActive then forceBlock() end
     end
 end)
 
-BillboardEnd.OnClientEvent:Connect(function() MyTurnActive = false if not _G.UnblockActive then resetJump() end end)
-ResultUIEvent.OnClientEvent:Connect(function() MyTurnActive = false IsMatchActive = false if not _G.UnblockActive then resetJump() end end)
+BillboardEnd.OnClientEvent:Connect(function() 
+    MyTurnActive = false 
+    isPlaying = false
+    game:GetService("ContextActionService"):UnbindAction("VanishedBlock")
+end)
+
+ResultUIEvent.OnClientEvent:Connect(function() 
+    MyTurnActive = false 
+    isPlaying = false 
+    game:GetService("ContextActionService"):UnbindAction("VanishedBlock")
+end)
 
 MainTab:Select()
