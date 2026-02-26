@@ -12,16 +12,10 @@ local Window = WindUI:CreateWindow({
     Theme = "Dark",
     Size = UDim2.fromOffset(580, 460),
     Transparent = true,
-    
-    
 })
 
 MinimizeKey = Window:SetToggleKey(Enum.KeyCode.RightControl)
-
--- Matikan tombol bawaan agar tidak konflik
-Window:DisableTopbarButtons({
-    --"Minimize", 
-})
+Window:DisableTopbarButtons({})
 
 -- // 2. DAFTARKAN TAB // --
 local MainTab = Window:Tab({ Title = "Main", Icon = "lucide:house" })
@@ -29,7 +23,7 @@ local AboutTab = Window:Tab({ Title = "About", Icon = "info" })
 
 -- // 3. DATABASE & VARIABLES // --
 local Dictionary, UsedWords, Blacklist = {}, {}, {}
-local KamusReady, MyTurnActive = false, false
+local KamusReady, MyTurnActive, IsMatchActive = false, false, false -- Tambah IsMatchActive
 local PriorityLetter, CurrentPrefix = "", ""
 
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -59,14 +53,10 @@ local function loadKamus()
         "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst",
         "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI5"
     }
-
     pcall(function()
         local bRes = game:HttpGet(BlacklistURL)
-        for line in bRes:gmatch("[^\r\n]+") do
-            Blacklist[line:lower():gsub("%s+", "")] = true
-        end
+        for line in bRes:gmatch("[^\r\n]+") do Blacklist[line:lower():gsub("%s+", "")] = true end
     end)
-
     for _, url in ipairs(KamusURLs) do
         pcall(function()
             local res = game:HttpGet(url)
@@ -74,9 +64,7 @@ local function loadKamus()
                 local word = line:match("^%s*([%a%-]+)")
                 if word then
                     local clean = word:lower():gsub("[^%a]", "")
-                    if #clean >= 2 and not Blacklist[clean] then
-                        Dictionary[clean] = true
-                    end
+                    if #clean >= 2 and not Blacklist[clean] then Dictionary[clean] = true end
                 end
             end
         end)
@@ -156,9 +144,7 @@ MainTab:Toggle({
         _G.AutoJoin = v
         task.spawn(function()
             while _G.AutoJoin do
-                if not Player:GetAttribute("CurrentTable") then
-                    ReplicatedStorage.Remotes.JoinTable:FireServer("Table_8P")
-                end
+                if not Player:GetAttribute("CurrentTable") then ReplicatedStorage.Remotes.JoinTable:FireServer("Table_8P") end
                 task.wait(2)
             end
         end)
@@ -170,14 +156,24 @@ MainTab:Toggle({
     Value = false,
     Callback = function(v)
         _G.UnblockActive = v
-        if _G.UnblockActive then
+        if not v then
+            -- Jika dimatikan saat sedang main, langsung paksa block
+            if IsMatchActive then
+                local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+                if hum then hum.JumpPower = 0 hum.WalkSpeed = 0 end
+            end
+        else
             task.spawn(function()
                 local CAS = game:GetService("ContextActionService")
                 while _G.UnblockActive do
                     CAS:UnbindAction("BlockJump")
                     local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then hum.JumpPower = 50 hum.WalkSpeed = 16 end
-                    task.wait(0.1)
+                    if hum then 
+                        hum.JumpPower = 50 
+                        hum.WalkSpeed = 16 
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                    end
+                    task.wait(0.2)
                 end
             end)
         end
@@ -192,29 +188,33 @@ AboutTab:Button({
     end
 })
 
--- // 8. OPEN BUTTON (PAKAI FUNGSI BAWAAN) // --
+-- // 8. OPEN BUTTON // --
 Window:EditOpenButton({
-    Title = "Vanished", -- Kosongin biar cuma fokus ke icon/box
-    Icon = "lucide:monitor", -- ID Gambar lo
+    Title = "", 
+    Icon = "rbxassetid://85002796312935", 
     CornerRadius = UDim.new(0,16),
-    StrokeThickness = 1,
-    Color = ColorSequence.new( -- gradient lo
-        Color3.fromHex("FF0F7B"), 
-        Color3.fromHex("F89B29")
-    ),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(Color3.fromHex("FF0F7B"), Color3.fromHex("F89B29")),
     OnlyMobile = false,
     Enabled = true,
-    Draggable = false, -- Kalo tetep static, ini emang bug library-nya
+    Draggable = true,
 })
 
 -- // 9. EVENT HANDLER // --
 local function resetJump()
+    if _G.UnblockActive then return end -- Jangan reset kalau unblock lagi aktif
     local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-    if hum then hum.JumpPower = 50 hum.WalkSpeed = 16 end
+    if hum then hum.JumpPower = 0 hum.WalkSpeed = 0 end -- Default mati saat main
 end
 
 MatchUIEvent.OnClientEvent:Connect(function(action, value)
-    if action == "UpdateServerLetter" then CurrentPrefix = tostring(value):lower()
+    if action == "UpdateServerLetter" then 
+        CurrentPrefix = tostring(value):lower()
+    elseif action == "ShowMatchUI" then
+        IsMatchActive = true
+    elseif action == "HideMatchUI" or action == "Eliminated" then
+        IsMatchActive = false
+        if not _G.UnblockActive then resetJump() end
     elseif action == "StartTurn" then
         MyTurnActive = true
         if KamusReady and AutoAns.Value then task.spawn(executeAutoInput) end
@@ -224,8 +224,7 @@ MatchUIEvent.OnClientEvent:Connect(function(action, value)
     end
 end)
 
-BillboardEnd.OnClientEvent:Connect(function() MyTurnActive = false resetJump() end)
-ResultUIEvent.OnClientEvent:Connect(function() MyTurnActive = false resetJump() end)
+BillboardEnd.OnClientEvent:Connect(function() MyTurnActive = false if not _G.UnblockActive then resetJump() end end)
+ResultUIEvent.OnClientEvent:Connect(function() MyTurnActive = false IsMatchActive = false if not _G.UnblockActive then resetJump() end end)
 
--- // SOLUSI: LANGSUNG SELECT TAB MAIN // --
 MainTab:Select()
