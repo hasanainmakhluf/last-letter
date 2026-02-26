@@ -1,106 +1,36 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
-local isMobile = game:GetService("UserInputService").TouchEnabled
-
-local Window = Fluent:CreateWindow({
+-- // 1. INITIALIZE WINDOW // --
+local Window = WindUI:CreateWindow({
     Title = "Vanished Hub",
-    SubTitle = "v1.0",
-    TabWidth = isMobile and 140 or 160, -- Tab lebih ramping di Mobile
-    Size = isMobile and UDim2.fromOffset(480, 320) or UDim2.fromOffset(580, 460), -- Lebih kecil di Mobile
-    Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.RightControl
+    PublicTitle = "v1.0",
+    Icon = "lucide:skull",
+    Theme = "Dark",
+    Size = UDim2.fromOffset(580, 460),
+    Transparent = true,
+    
+    
 })
 
--- Beri nama unik pada folder GUI Fluent agar mudah dicari tombol
-local GuiParent = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
-if GuiParent then
-    GuiParent.Name = "VanishedGui"
-end
+MinimizeKey = Window:SetToggleKey(Enum.KeyCode.RightControl)
 
--- // 6. TOMBOL MANUAL TOGGLE (ANTI-BUG EMULATOR) // --
-task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    
-    -- Bersihkan tombol lama
-    local function clean(p)
-        for _, v in pairs(p:GetChildren()) do
-            if v.Name == "VanishedMobileToggle" then v:Destroy() end
-        end
-    end
-    clean(CoreGui) clean(PlayerGui)
+-- Matikan tombol bawaan agar tidak konflik
+Window:DisableTopbarButtons({
+    --"Minimize", 
+})
 
-    local ScreenGui = Instance.new("ScreenGui", CoreGui)
-    ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.IgnoreGuiInset = true 
-    ScreenGui.DisplayOrder = 9999999
+-- // 2. DAFTARKAN TAB // --
+local MainTab = Window:Tab({ Title = "Main", Icon = "lucide:house" })
+local AboutTab = Window:Tab({ Title = "About", Icon = "info" })
 
-    local ImageButton = Instance.new("ImageButton", ScreenGui)
-    ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.Position = UDim2.new(0, 15, 0.5, -22) 
-    ImageButton.Size = UDim2.new(0, 45, 0, 45) 
-    ImageButton.Image = "rbxassetid://85002796312935" 
-    ImageButton.Draggable = true 
-    ImageButton.Active = true
-
-    Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", ImageButton)
-    Stroke.Color = Color3.new(1, 1, 1)
-    Stroke.Thickness = 2
-
-    -- // FUNGSI TOGGLE PAKSA (MANUAL) // --
-    ImageButton.MouseButton1Down:Connect(function()
-        -- Cari folder GUI yang kita ganti namanya tadi
-        local target = CoreGui:FindFirstChild("VanishedGui") or 
-                       PlayerGui:FindFirstChild("VanishedGui") or
-                       CoreGui:FindFirstChild("Fluent") or 
-                       PlayerGui:FindFirstChild("Fluent")
-
-        if target then
-            -- Fluent punya frame utama namanya "Main"
-            local mainFrame = target:FindFirstChild("Main")
-            if mainFrame then
-                mainFrame.Visible = not mainFrame.Visible
-                print("Vanished Hub: Toggle Berhasil!")
-            else
-                -- Jika Main tidak ketemu, toggle seluruh ScreenGui
-                target.Enabled = not target.Enabled
-            end
-        else
-            warn("Vanished Hub: Folder GUI tidak ditemukan!")
-        end
-    end)
-end)
-
--- 1. DAFTARKAN SEMUA TAB
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
-    About = Window:AddTab({ Title = "About", Icon = "info" })
-}
-
--- LANGSUNG KE TAB MAIN (INSTAN)
-Window:SelectTab(1)
-
--- // 1. DATABASE KAMUS LOADER & BLACKLIST // --
-local Dictionary = {}
-local UsedWords = {} 
-local Blacklist = {} 
-local KamusReady = false
-local PriorityLetter = "" 
-
--- Sumber Data (GitHub)
-local BlacklistURL = "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/blacklist.txt"
-local KamusURLs = {
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI1.txt",
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI2.txt",
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI3.txt",
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI4.txt",
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBIv4.txt",
-    "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst",
-    "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI5"
-}
+-- // 3. DATABASE & VARIABLES // --
+local Dictionary, UsedWords, Blacklist = {}, {}, {}
+local KamusReady, MyTurnActive = false, false
+local PriorityLetter, CurrentPrefix = "", ""
 
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -108,284 +38,194 @@ local MatchUIEvent = ReplicatedStorage.Remotes:WaitForChild("MatchUI")
 local BillboardEnd = ReplicatedStorage.Remotes:WaitForChild("BillboardEnd")
 local ResultUIEvent = ReplicatedStorage.Remotes:WaitForChild("ResultUI")
 
--- // FUNGSI LOAD DATA // --
-local function loadKamus()
-    local bSuccess, bResponse = pcall(function() return game:HttpGet(BlacklistURL) end)
-    if bSuccess then
-        for line in bResponse:gmatch("[^\r\n]+") do
-            local clean = line:lower():gsub("%s+", "")
-            if #clean > 0 then Blacklist[clean] = true end
-        end
+-- // 4. AUTO EQUIP AURA (PETALS) // --
+task.spawn(function()
+    local AuraRemote = ReplicatedStorage:FindFirstChild("Aura_RF", true)
+    if AuraRemote then
+        AuraRemote:InvokeServer("EquipAura", "Petals")
+        WindUI:Notify({ Title = "Aura Active", Content = "Petals Aura equipped!", Duration = 5 })
     end
+end)
 
-    local RawList = {}
-    for i, url in ipairs(KamusURLs) do
-        local success, response = pcall(function() return game:HttpGet(url) end)
-        if success then
-            for line in response:gmatch("[^\r\n]+") do
-                local firstPart = line:match("^%s*([%a%-]+)") 
-                if firstPart then
-                    local cleanWord = firstPart:lower():gsub("[^%a]", "")
-                    if #cleanWord >= 2 and not Blacklist[cleanWord] then
-                        table.insert(RawList, cleanWord)
+-- // 5. LOAD KAMUS // --
+local function loadKamus()
+    local BlacklistURL = "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/blacklist.txt"
+    local KamusURLs = {
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI1.txt",
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI2.txt",
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI3.txt",
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI4.txt",
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBIv4.txt",
+        "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst",
+        "https://raw.githubusercontent.com/hasanainmakhluf/last-letter/refs/heads/main/KBBI5"
+    }
+
+    pcall(function()
+        local bRes = game:HttpGet(BlacklistURL)
+        for line in bRes:gmatch("[^\r\n]+") do
+            Blacklist[line:lower():gsub("%s+", "")] = true
+        end
+    end)
+
+    for _, url in ipairs(KamusURLs) do
+        pcall(function()
+            local res = game:HttpGet(url)
+            for line in res:gmatch("[^\r\n]+") do
+                local word = line:match("^%s*([%a%-]+)")
+                if word then
+                    local clean = word:lower():gsub("[^%a]", "")
+                    if #clean >= 2 and not Blacklist[clean] then
+                        Dictionary[clean] = true
                     end
                 end
             end
-        end
+        end)
     end
-
-    local tempSeen = {}
-    for _, word in ipairs(RawList) do
-        if not tempSeen[word] then
-            table.insert(Dictionary, word)
-            tempSeen[word] = true
-        end
-    end
-    
-    if #Dictionary > 0 then
-        KamusReady = true
-    end
+    KamusReady = true
 end
-
 task.spawn(loadKamus)
 
--- // 2. LOGIKA AUTO-INPUT // --
-local CurrentPrefix = ""
-local MyTurnActive = false
-
+-- // 6. LOGIKA AUTO-INPUT // --
 local function cariKataBaru(prefix)
-    local matches = {}
-    local priorityMatches = {}
-    
-    for _, word in ipairs(Dictionary) do
-        if word:sub(1, #prefix) == prefix and not UsedWords[word] and #word > #prefix then
-            if _G.PriorityActive and PriorityLetter ~= "" then
-                if word:sub(-#PriorityLetter) == PriorityLetter then
-                    table.insert(priorityMatches, word)
-                end
+    local matches, priorityMatches = {}, {}
+    for w in pairs(Dictionary) do
+        if w:sub(1, #prefix) == prefix and not UsedWords[w] and #w > #prefix then
+            if _G.PriorityActive and PriorityLetter ~= "" and w:sub(-#PriorityLetter) == PriorityLetter then
+                table.insert(priorityMatches, w)
             end
-            table.insert(matches, word)
+            table.insert(matches, w)
         end
     end
-    
     if #priorityMatches > 0 then return priorityMatches[math.random(1, #priorityMatches)] end
-    if #matches > 0 then return matches[math.random(1, #matches)] end
-    return nil
+    return #matches > 0 and matches[math.random(1, #matches)] or nil
 end
 
 local function executeAutoInput()
-    local retryCount = 0
-    local maxRetries = 5
-    local lastSuffixLength = 0
-
-    while MyTurnActive and retryCount < maxRetries do
-        if retryCount > 0 and lastSuffixLength > 0 then
-            for i = 1, lastSuffixLength do
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Backspace, false, game)
-                task.wait(0.1)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Backspace, false, game)
-            end
-            task.wait(0.1)
-        end
-
-        local chosenWord = cariKataBaru(CurrentPrefix)
-        if not chosenWord then break end
-
-        if retryCount == 0 then task.wait(2) else task.wait(1) end
-        if not MyTurnActive then break end
-
-        local suffix = chosenWord:sub(#CurrentPrefix + 1)
-        lastSuffixLength = #suffix
-
+    local retry = 0
+    while MyTurnActive and retry < 5 do
+        local chosen = cariKataBaru(CurrentPrefix)
+        if not chosen then break end
+        task.wait(2)
+        local suffix = chosen:sub(#CurrentPrefix + 1)
         for i = 1, #suffix do
-    if not MyTurnActive then break end
-    local char = suffix:sub(i, i):upper()
-    local code = Enum.KeyCode[char]
-    
-    if code then
-        VirtualInputManager:SendKeyEvent(true, code, false, game)
-        task.wait(0.01) -- Jeda tekan tombol (tetap kecil agar responsif)
-        VirtualInputManager:SendKeyEvent(false, code, false, game)
-        pcall(function() ReplicatedStorage.Remotes.TypeSound:FireServer() end)
-    end
-    
-    -- MEMBUAT JEDA RANDOM 0.1 - 0.5 DETIK
-    local randomDelay = math.random(10, 50) / 100 
-    task.wait(randomDelay) 
-    end
-
-        if not MyTurnActive then break end
-
-        task.wait(0.01) -- Delay sebelum Enter dipercepat dari 0.05
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-        task.wait(0.01)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-        
-        UsedWords[chosenWord] = true
-        task.wait(1) -- Delay istirahat dipercepat dari 1.2
-        
-        if not MyTurnActive then return else retryCount = retryCount + 1 end
+            if not MyTurnActive then break end
+            local key = suffix:sub(i,i):upper()
+            local success, keyCode = pcall(function() return Enum.KeyCode[key] end)
+            if success and keyCode then
+                VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+                task.wait(0.01)
+                VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+                pcall(function() ReplicatedStorage.Remotes.TypeSound:FireServer() end)
+            end
+            task.wait(math.random(10, 50) / 100)
+        end
+        if MyTurnActive then
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+            task.wait(0.01) VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+            UsedWords[chosen] = true
+            task.wait(1)
+            retry = retry + 1
+        end
     end
 end
 
--- // 3. ISI KONTEN TAB MAIN // --
-local Toggle1 = Tabs.Main:AddToggle("AutoAnswerToggle", {
-    Title = "Auto Answer", 
-    Default = false,
-    Description = "Menjawab pertanyaan secara otomatis saat giliranmu"
+-- // 7. ISI MENU // --
+local AutoAns = MainTab:Toggle({
+    Title = "Auto Answer",
+    Description = "Menjawab otomatis saat giliranmu",
+    Value = false,
+    Callback = function() end
 })
 
-Toggle1:OnChanged(function()
-    if Toggle1.Value and MyTurnActive and KamusReady then task.spawn(executeAutoInput) end
-end)
-
-local MyInput = Tabs.Main:AddInput("LastLetterPriority", {
+MainTab:Input({
     Title = "Priority Last Letter",
-    Default = "",
-    Placeholder = "Ketik huruf akhiran (contoh: k)...",
-    Callback = function(Value) PriorityLetter = Value:lower():gsub("%s+", "") end
+    Placeholder = "Contoh: k",
+    Callback = function(v) PriorityLetter = v:lower():gsub("%s+", "") end
 })
 
-local TogglePriority = Tabs.Main:AddToggle("PriorityToggle", {
+MainTab:Toggle({
     Title = "Enable Priority Letter",
-    Default = false,
-    Description = "Utamakan kata yang berakhiran huruf di atas"
+    Value = false,
+    Callback = function(v) _G.PriorityActive = v end
 })
 
-TogglePriority:OnChanged(function() _G.PriorityActive = TogglePriority.Value end)
-
-local Toggle2 = Tabs.Main:AddToggle("AutoJoinToggle", { 
-    Title = "Auto Join Table 8", 
-    Default = false,
-    Description = "Otomatis masuk ke meja 8 orang"
-})
-
-Toggle2:OnChanged(function()
-    _G.AutoJoin = Toggle2.Value
-    if _G.AutoJoin then
+MainTab:Toggle({
+    Title = "Auto Join Table 8",
+    Value = false,
+    Callback = function(v)
+        _G.AutoJoin = v
         task.spawn(function()
             while _G.AutoJoin do
-                if not game.Players.LocalPlayer:GetAttribute("CurrentTable") then
+                if not Player:GetAttribute("CurrentTable") then
                     ReplicatedStorage.Remotes.JoinTable:FireServer("Table_8P")
                 end
                 task.wait(2)
             end
         end)
     end
-end)
-
-local Toggle3 = Tabs.Main:AddToggle("UnblockJumpToggle", {
-    Title = "Unblock Jump & Speed", 
-    Default = false,
-    Description = "Bypass pembatasan gerak saat bermain"
 })
 
-Toggle3:OnChanged(function()
-    _G.UnblockActive = Toggle3.Value
-    
-    if _G.UnblockActive then
-        task.spawn(function()
-            local CAS = game:GetService("ContextActionService")
-            while _G.UnblockActive do
-                -- Buka blokir dari sistem game
-                CAS:UnbindAction("BlockJump")
-                
-                local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    -- Paksa aktif saat Toggle ON
-                    hum.JumpPower = 50 
-                    hum.JumpHeight = 7.2
-                    hum.WalkSpeed = 16
+MainTab:Toggle({
+    Title = "Unblock Jump & Speed",
+    Value = false,
+    Callback = function(v)
+        _G.UnblockActive = v
+        if _G.UnblockActive then
+            task.spawn(function()
+                local CAS = game:GetService("ContextActionService")
+                while _G.UnblockActive do
+                    CAS:UnbindAction("BlockJump")
+                    local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then hum.JumpPower = 50 hum.WalkSpeed = 16 end
+                    task.wait(0.1)
                 end
-                task.wait(0.1)
-            end
-        end)
-    else
-        -- LOGIKA SAAT OFF (BLOCK JIKA SEDANG MAIN)
-        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        local isAtTable = game.Players.LocalPlayer:GetAttribute("CurrentTable") ~= nil
-        
-        if hum then
-            if isAtTable then
-                -- Kunci total gerakan jika sedang di meja dan Toggle OFF
-                hum.JumpPower = 0
-                hum.JumpHeight = 0
-                hum.WalkSpeed = 0
-                Fluent:Notify({ Title = "Movement Blocked", Content = "Gerakan dikunci kembali.", Duration = 3 })
-            else
-                -- Normal kembali jika di Lobby
-                hum.JumpPower = 50
-                hum.JumpHeight = 7.2
-                hum.WalkSpeed = 16
-            end
+            end)
         end
     end
-end)
+})
 
--- 4. ISI KONTEN TAB ABOUT
-Tabs.About:AddParagraph({ Title = "Script Info", Content = "Created by: Vanished Hub" })
-Tabs.About:AddButton({
+AboutTab:Button({
     Title = "Copy Discord Link",
-    Description = "Klik untuk menyalin link komunitas",
     Callback = function()
         setclipboard("https://discord.gg/NcG6cnZ3m5")
-        Fluent:Notify({ Title = "Success", Content = "Link copied!", Duration = 3 })
+        WindUI:Notify({ Title = "Success", Content = "Link copied!", Duration = 3 })
     end
 })
 
--- // 5. EVENT HANDLER & RESETTER // --
+-- // 8. OPEN BUTTON (PAKAI FUNGSI BAWAAN) // --
+Window:EditOpenButton({
+    Title = "Vanished", -- Kosongin biar cuma fokus ke icon/box
+    Icon = "lucide:monitor", -- ID Gambar lo
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 1,
+    Color = ColorSequence.new( -- gradient lo
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = false, -- Kalo tetep static, ini emang bug library-nya
+})
+
+-- // 9. EVENT HANDLER // --
 local function resetJump()
-    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.JumpPower = 50
-        hum.JumpHeight = 7.2
-        if hum.WalkSpeed <= 0 then hum.WalkSpeed = 16 end
-    end
+    local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.JumpPower = 50 hum.WalkSpeed = 16 end
 end
 
 MatchUIEvent.OnClientEvent:Connect(function(action, value)
-    if action == "UpdateServerLetter" then
-        CurrentPrefix = tostring(value):lower()
+    if action == "UpdateServerLetter" then CurrentPrefix = tostring(value):lower()
     elseif action == "StartTurn" then
         MyTurnActive = true
-        if KamusReady and Toggle1.Value then 
-            task.spawn(executeAutoInput) 
-        end
+        if KamusReady and AutoAns.Value then task.spawn(executeAutoInput) end
     elseif action == "EndTurn" then
         MyTurnActive = false
         if not _G.UnblockActive then resetJump() end
     end
 end)
 
-BillboardEnd.OnClientEvent:Connect(function()
-    MyTurnActive = false
-    resetJump()
-end)
+BillboardEnd.OnClientEvent:Connect(function() MyTurnActive = false resetJump() end)
+ResultUIEvent.OnClientEvent:Connect(function() MyTurnActive = false resetJump() end)
 
-ResultUIEvent.OnClientEvent:Connect(function()
-    MyTurnActive = false
-    resetJump()
-end)
-
--- // LOGIKA CLOSE DIALOG // --
-Window:OnProcessed(function()
-    Window:Dialog({
-        Title = "Close Script",
-        Content = "Apakah kamu ingin mematikan script sepenuhnya?",
-        Buttons = {
-            {
-                Title = "Yes",
-                Callback = function()
-                    _G.UnblockActive = false
-                    _G.AutoJoin = false
-                    _G.PriorityActive = false
-                    MyTurnActive = false
-                    resetJump()
-                    Fluent:Destroy()
-                end
-            },
-            { Title = "No", Callback = function() end }
-        }
-    })
-end)
-
+-- // SOLUSI: LANGSUNG SELECT TAB MAIN // --
+MainTab:Select()
