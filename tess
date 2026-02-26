@@ -13,61 +13,55 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
--- // 6. REFRESH & REPLACE TOGGLE (DENGAN SIMULASI RIGHT CTRL) // --
+_G.Fluent = Fluent
+
+-- // 6. REFRESH & REPLACE TOGGLE (DIRECT CALL VERSION) // --
 task.spawn(function()
     local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui")
-    local VIM = game:GetService("VirtualInputManager")
     
-    -- HAPUS PAKSA SEMUA TOMBOL LAMA
+    -- Pembersihan tombol lama
     for _, child in pairs(RobloxGui:GetChildren()) do
-        if child.Name == "EmergencyV" or child.Name == "VanishedMobileToggle" or child.Name == "VanishedToggle" then
-            child:Destroy()
-        end
+        if child.Name == "VanishedMobileToggle" then child:Destroy() end
     end
     task.wait(0.1)
 
-    local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-
+    local ScreenGui = Instance.new("ScreenGui", RobloxGui)
     ScreenGui.Name = "VanishedMobileToggle"
-    ScreenGui.Parent = RobloxGui 
     ScreenGui.IgnoreGuiInset = true 
     ScreenGui.DisplayOrder = 999999
 
-    -- SETTING VISUAL (ICON BOX)
-    ImageButton.Parent = ScreenGui
+    local ImageButton = Instance.new("ImageButton", ScreenGui)
     ImageButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.1, 0, 0.15, 0) 
     ImageButton.Size = UDim2.new(0, 45, 0, 45) 
     ImageButton.Image = "rbxassetid://85002796312935" 
     ImageButton.Draggable = true 
-    ImageButton.Active = true -- Pastikan Active agar bisa di-klik
-    ImageButton.ZIndex = 1000000
+    ImageButton.Active = true
 
-    -- Bulat & Border
     local UICorner = Instance.new("UICorner", ImageButton)
     UICorner.CornerRadius = UDim.new(0, 10)
 
     local UIStroke = Instance.new("UIStroke", ImageButton)
     UIStroke.Color = Color3.fromRGB(255, 255, 255)
     UIStroke.Thickness = 2
-    UIStroke.ApplyStrokeMode = Enum.UIStrokeMode.Border
 
-    -- // FUNGSI KLIK: SIMULASI TEKAN RIGHT CTRL // --
-    ImageButton.MouseButton1Click:Connect(function()
-        -- Simulasi menekan tombol Right Control secara fisik
-        VIM:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
-        task.wait(0.01)
-        VIM:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
-        
-        -- Efek visual feedback (tombol berkedip saat diklik)
-        ImageButton.ImageTransparency = 0.5
-        task.wait(0.1)
-        ImageButton.ImageTransparency = 0
+    -- // FUNGSI KLIK: PANGGIL PAKSA FUNGSI FLUENT // --
+    ImageButton.MouseButton1Down:Connect(function()
+        if _G.Fluent then
+            -- Memanggil fungsi Minimize bawaan Fluent secara langsung
+            _G.Fluent:Minimize()
+        else
+            -- Jika variabel global belum siap, cari GUI secara manual (Sapu Jagat)
+            local target = game:GetService("CoreGui"):FindFirstChild("Fluent") or 
+                           game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Fluent")
+            if target then
+                target.Enabled = not target.Enabled
+                if target:FindFirstChild("Main") then
+                    target.Main.Visible = target.Enabled
+                end
+            end
+        end
     end)
-    
-    print("Vanished Hub: Tombol Icon Box siap dengan simulasi RightCtrl!")
 end)
 
 -- 1. DAFTARKAN SEMUA TAB
