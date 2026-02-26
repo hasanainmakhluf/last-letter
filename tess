@@ -24,7 +24,7 @@ local AboutTab = Window:Tab({ Title = "About", Icon = "info" })
 -- // 3. DATABASE & VARIABLES // --
 local Dictionary, UsedWords, Blacklist = {}, {}, {}
 local KamusReady, MyTurnActive = false, false
-local isPlaying = false -- Sesuai variabel v_u_29 di decompiler
+local isPlaying = false 
 local PriorityLetter, CurrentPrefix = "", ""
 
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -74,7 +74,7 @@ local function loadKamus()
 end
 task.spawn(loadKamus)
 
--- // 6. LOGIKA AUTO-INPUT // --
+-- // 6. LOGIKA AUTO-INPUT (WITH BACKSPACE CHECK) // --
 local function cariKataBaru(prefix)
     local matches, priorityMatches = {}, {}
     for w in pairs(Dictionary) do
@@ -90,31 +90,58 @@ local function cariKataBaru(prefix)
 end
 
 local function executeAutoInput()
-    local retry = 0
-    while MyTurnActive and retry < 5 do
-        local chosen = cariKataBaru(CurrentPrefix)
-        if not chosen then break end
-        task.wait(2)
-        local suffix = chosen:sub(#CurrentPrefix + 1)
+    local retryCount = 0
+    local maxRetries = 5
+    local lastSuffixLength = 20 -- Awal giliran hapus 20 karakter biar bersih
+
+    while MyTurnActive and retryCount < maxRetries do
+        -- // PROSES HAPUS (BACKSPACE) // --
+        if lastSuffixLength > 0 then
+            for i = 1, lastSuffixLength do
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Backspace, false, game)
+                task.wait(0.1)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Backspace, false, game)
+            end
+            task.wait(0.1)
+        end
+
+        local chosenWord = cariKataBaru(CurrentPrefix)
+        if not chosenWord then break end
+
+        -- Delay ngetik awal vs retry
+        if retryCount == 0 then task.wait(2) else task.wait(1) end
+        if not MyTurnActive then break end
+
+        local suffix = chosenWord:sub(#CurrentPrefix + 1)
+        lastSuffixLength = #suffix -- Simpan panjang kata untuk dihapus jika salah
+
+        -- // PROSES NGETIK // --
         for i = 1, #suffix do
             if not MyTurnActive then break end
-            local key = suffix:sub(i,i):upper()
-            local success, keyCode = pcall(function() return Enum.KeyCode[key] end)
-            if success and keyCode then
-                VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+            local char = suffix:sub(i, i):upper()
+            local code = Enum.KeyCode[char]
+            
+            if code then
+                VirtualInputManager:SendKeyEvent(true, code, false, game)
                 task.wait(0.01)
-                VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+                VirtualInputManager:SendKeyEvent(false, code, false, game)
                 pcall(function() ReplicatedStorage.Remotes.TypeSound:FireServer() end)
             end
-            task.wait(math.random(10, 50) / 100)
+            -- Jeda random biar manusiawi
+            task.wait(math.random(10, 50) / 100) 
         end
-        if MyTurnActive then
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-            task.wait(0.01) VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-            UsedWords[chosen] = true
-            task.wait(1)
-            retry = retry + 1
-        end
+
+        if not MyTurnActive then break end
+
+        -- // ENTER // --
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+        task.wait(0.01)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+        
+        UsedWords[chosenWord] = true
+        task.wait(0.3)
+        
+        if not MyTurnActive then return else retryCount = retryCount + 1 end
     end
 end
 
@@ -160,13 +187,8 @@ MainTab:Toggle({
         local CAS = game:GetService("ContextActionService")
         
         if not v then
-            -- JIKA OFF: Cek apakah sedang bermain
             if isPlaying then
-                -- Bind dengan priority 10000 agar menang melawan script game
-                CAS:BindActionAtPriority("VanishedBlock", function() 
-                    return Enum.ContextActionResult.Sink 
-                end, false, 10000, Enum.KeyCode.Space)
-                
+                CAS:BindActionAtPriority("VanishedBlock", function() return Enum.ContextActionResult.Sink end, false, 10000, Enum.KeyCode.Space)
                 local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
                 if hum then 
                     hum.JumpPower = 0 
@@ -175,11 +197,10 @@ MainTab:Toggle({
                 end
             end
         else
-            -- JIKA ON: Lepas blokir
             CAS:UnbindAction("VanishedBlock")
             task.spawn(function()
                 while _G.UnblockActive do
-                    CAS:UnbindAction("BlockJump") -- Unbind aksi bawaan game jika ada
+                    CAS:UnbindAction("BlockJump") 
                     local h = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
                     if h then 
                         h.JumpPower = 50 
@@ -222,9 +243,7 @@ local function forceBlock()
         hum.WalkSpeed = 0 
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
     end
-    game:GetService("ContextActionService"):BindActionAtPriority("VanishedBlock", function() 
-        return Enum.ContextActionResult.Sink 
-    end, false, 10000, Enum.KeyCode.Space)
+    game:GetService("ContextActionService"):BindActionAtPriority("VanishedBlock", function() return Enum.ContextActionResult.Sink end, false, 10000, Enum.KeyCode.Space)
 end
 
 MatchUIEvent.OnClientEvent:Connect(function(action, value)
