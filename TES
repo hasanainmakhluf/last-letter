@@ -1,0 +1,385 @@
+local CoreGui = game:GetService("CoreGui")
+local MarketPlaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+
+-- RESOLUSI IMAGE PALING OPTIMAL 300x240px
+-- =============================================================================
+-- [ DATABASE MODS - SETTING DI SINI ]
+-- =============================================================================
+local ModDatabase = {
+    [130342654546662] = { -- ID Game Sambung Kata
+        {
+            Name = "Sambung Kata | PC",
+            Type = "PC Version",
+            Image = "rbxassetid://112441759734101", 
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata'))()"
+        },
+        {
+            Name = "Sambung Kata | Mobile",
+            Type = "Mobile Version",
+            Image = "rbxassetid://112441759734101",
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata-mobile'))()"
+        },
+        {
+            Name = "Sambung Kata | Kamus",
+            Type = "Kamus Only",
+            Image = "rbxassetid://112441759734101",
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/kamus-sambung-kata'))()"
+        }
+    },
+    [129866685202296] = { -- Last Letter
+        {
+            Name = "Last Letter | PC",
+            Type = "PC Version",
+            Image = "rbxassetid://72300574333295",
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter'))()"
+        }
+    }
+}
+-- =============================================================================
+
+-- 1. LOAD ICONS
+local success, IconsV2 = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"))()
+end)
+
+local function SafeGetIcon(name)
+    if success and IconsV2 then
+        IconsV2.SetIconsType("lucide")
+        return IconsV2.GetIcon(name)
+    else
+        return "rbxassetid://10734898355"
+    end
+end
+
+-- 2. SETUP SCREEN GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "VanishedHub_Final"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- 3. MAIN FRAME (500x300)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 500, 0, 280)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+-- 4. HEADER (ROW 1)
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Header.Position = UDim2.new(0, 10, 0, 10) 
+Header.Size = UDim2.new(0, 480, 0, 50) 
+Header.BorderSizePixel = 0
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 6)
+HeaderCorner.Parent = Header
+
+local TitleIcon = Instance.new("ImageLabel")
+TitleIcon.Parent = Header
+TitleIcon.BackgroundTransparency = 1
+TitleIcon.AnchorPoint = Vector2.new(0, 0.5)
+TitleIcon.Position = UDim2.new(0, 15, 0.5, 0)
+TitleIcon.Size = UDim2.new(0, 20, 0, 20)
+TitleIcon.Image = SafeGetIcon("house")
+TitleIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+
+local TitleContainer = Instance.new("Frame")
+TitleContainer.Parent = Header
+TitleContainer.BackgroundTransparency = 1
+TitleContainer.Position = UDim2.new(0, 42, 0, 0)
+TitleContainer.Size = UDim2.new(1, -200, 1, 0) -- Diperlebar sedikit agar aman
+
+local UIListTitle = Instance.new("UIListLayout")
+UIListTitle.Parent = TitleContainer
+UIListTitle.FillDirection = Enum.FillDirection.Horizontal
+UIListTitle.SortOrder = Enum.SortOrder.LayoutOrder
+UIListTitle.VerticalAlignment = Enum.VerticalAlignment.Center
+UIListTitle.Padding = UDim.new(0, 8)
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Parent = TitleContainer
+TitleText.BackgroundTransparency = 1
+TitleText.Size = UDim2.new(0, 0, 1, 0)
+TitleText.AutomaticSize = Enum.AutomaticSize.X
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Text = "Vanished Hub"
+TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleText.TextSize = 14
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+
+local Separator = Instance.new("TextLabel")
+Separator.Parent = TitleContainer
+Separator.BackgroundTransparency = 1
+Separator.Size = UDim2.new(0, 10, 1, 0)
+Separator.Font = Enum.Font.GothamMedium
+Separator.Text = "|"
+Separator.TextColor3 = Color3.fromRGB(80, 80, 80)
+Separator.TextSize = 14
+Separator.TextXAlignment = Enum.TextXAlignment.Center
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Name = "DiscordBtn"
+DiscordBtn.Parent = TitleContainer
+DiscordBtn.BackgroundTransparency = 1
+DiscordBtn.Size = UDim2.new(0, 0, 1, 0)
+DiscordBtn.AutomaticSize = Enum.AutomaticSize.X
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.Text = "Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
+DiscordBtn.TextSize = 14
+
+-- 5. BUTTONS (DATE, MINIMIZE, CLOSE)
+-- Container Tanggal (Sebelah kiri Minus)
+local DateDisplay = Instance.new("Frame")
+DateDisplay.Name = "DateDisplay"
+DateDisplay.Parent = Header
+DateDisplay.BackgroundTransparency = 1
+DateDisplay.Position = UDim2.new(1, -185, 0, 0)
+DateDisplay.Size = UDim2.new(0, 110, 1, 0)
+
+local UIListDate = Instance.new("UIListLayout")
+UIListDate.Parent = DateDisplay
+UIListDate.FillDirection = Enum.FillDirection.Horizontal
+UIListDate.HorizontalAlignment = Enum.HorizontalAlignment.Right
+UIListDate.VerticalAlignment = Enum.VerticalAlignment.Center
+UIListDate.Padding = UDim.new(0, 6)
+
+local DateText = Instance.new("TextLabel")
+DateText.Parent = DateDisplay
+DateText.BackgroundTransparency = 1
+DateText.Size = UDim2.new(0, 0, 1, 0)
+DateText.AutomaticSize = Enum.AutomaticSize.X
+DateText.Font = Enum.Font.GothamMedium
+DateText.TextColor3 = Color3.fromRGB(150, 150, 150)
+DateText.TextSize = 11
+DateText.Text = os.date("%d %b %Y") -- Format: 03 Mar 2026
+
+local DateIcon = Instance.new("ImageLabel")
+DateIcon.Parent = DateDisplay
+DateIcon.BackgroundTransparency = 1
+DateIcon.Size = UDim2.new(0, 14, 0, 14)
+DateIcon.Image = SafeGetIcon("calendar")
+DateIcon.ImageColor3 = Color3.fromRGB(150, 150, 150)
+
+-- Tombol Navigasi
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Position = UDim2.new(1, -40, 0, 0)
+CloseBtn.Size = UDim2.new(0, 40, 1, 0)
+CloseBtn.Text = ""
+
+local CloseIcon = Instance.new("ImageLabel")
+CloseIcon.Parent = CloseBtn
+CloseIcon.BackgroundTransparency = 1
+CloseIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+CloseIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+CloseIcon.Size = UDim2.new(0, 18, 0, 18)
+CloseIcon.Image = SafeGetIcon("x")
+CloseIcon.ImageColor3 = Color3.fromRGB(180, 180, 180)
+
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Parent = Header
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Position = UDim2.new(1, -75, 0, 0)
+MiniBtn.Size = UDim2.new(0, 40, 1, 0)
+MiniBtn.Text = ""
+
+local MiniIcon = Instance.new("ImageLabel")
+MiniIcon.Parent = MiniBtn
+MiniIcon.BackgroundTransparency = 1
+MiniIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+MiniIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+MiniIcon.Size = UDim2.new(0, 18, 0, 18)
+MiniIcon.Image = SafeGetIcon("minus")
+MiniIcon.ImageColor3 = Color3.fromRGB(180, 180, 180)
+
+-- MAXIMIZE BUTTON (Floating)
+local MaxBtn = Instance.new("ImageButton")
+MaxBtn.Name = "MaximizeButton"
+MaxBtn.Parent = ScreenGui
+MaxBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MaxBtn.Size = UDim2.new(0, 45, 0, 45)
+MaxBtn.Position = UDim2.new(0.5, -22, 0.5, -22) 
+MaxBtn.Visible = false
+MaxBtn.Image = "rbxassetid://85002796312935"
+MaxBtn.Draggable = true
+Instance.new("UICorner", MaxBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", MaxBtn).Color = Color3.fromRGB(40, 40, 40)
+
+-- 6. CATEGORY LABEL (ROW 2)
+local CategoryLabel = Instance.new("TextLabel")
+CategoryLabel.Parent = MainFrame
+CategoryLabel.BackgroundTransparency = 1
+CategoryLabel.Position = UDim2.new(0, 15, 0, 65) 
+CategoryLabel.Size = UDim2.new(0, 200, 0, 20)
+CategoryLabel.Font = Enum.Font.GothamMedium
+CategoryLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+CategoryLabel.TextSize = 11
+CategoryLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 7. SCROLLING AREA (MOD LIST)
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Parent = MainFrame
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.Position = UDim2.new(0, 10, 0, 90)
+ScrollFrame.Size = UDim2.new(0, 480, 0, 200)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) 
+ScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollFrame.ScrollBarThickness = 2
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 40)
+
+local UIGrid = Instance.new("UIGridLayout")
+UIGrid.Parent = ScrollFrame
+UIGrid.CellPadding = UDim2.new(0, 10, 0, 10)
+UIGrid.CellSize = UDim2.new(0, 153, 0, 180)
+
+-- 8. FUNGSI RENDER CARDS
+local function LoadMods()
+    local currentId = game.PlaceId
+    local mapName = "Unknown Map"
+    pcall(function() mapName = MarketPlaceService:GetProductInfo(currentId).Name end)
+    CategoryLabel.Text = "Map: " .. mapName
+    
+    local mods = ModDatabase[currentId]
+    if mods then
+        for _, mod in pairs(mods) do
+            local Card = Instance.new("Frame")
+            Card.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            Card.BorderSizePixel = 0
+            Card.Parent = ScrollFrame
+            Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+            
+            local Padding = Instance.new("Frame")
+            Padding.Size = UDim2.new(1, -16, 1, -16)
+            Padding.Position = UDim2.new(0.5, 0, 0.5, 0)
+            Padding.AnchorPoint = Vector2.new(0.5, 0.5)
+            Padding.BackgroundTransparency = 1
+            Padding.Parent = Card
+            
+            local Img = Instance.new("ImageLabel")
+            Img.Size = UDim2.new(1, 0, 0.7, 0)
+            Img.Image = mod.Image
+            Img.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Img.ScaleType = Enum.ScaleType.Crop
+            Img.Parent = Padding
+            Instance.new("UICorner", Img).CornerRadius = UDim.new(0, 4)
+            
+            local NameTxt = Instance.new("TextLabel")
+            NameTxt.Size = UDim2.new(0.8, 0, 0.15, 0)
+            NameTxt.Position = UDim2.new(0, 0, 0.75, 0)
+            NameTxt.BackgroundTransparency = 1
+            NameTxt.Font = Enum.Font.GothamBold
+            NameTxt.Text = mod.Name
+            NameTxt.TextColor3 = Color3.fromRGB(230, 230, 230)
+            NameTxt.TextSize = 10
+            NameTxt.TextXAlignment = Enum.TextXAlignment.Left
+            NameTxt.Parent = Padding
+            
+            local TypeTxt = Instance.new("TextLabel")
+            TypeTxt.Size = UDim2.new(0.8, 0, 0.1, 0)
+            TypeTxt.Position = UDim2.new(0, 0, 0.9, 0)
+            TypeTxt.BackgroundTransparency = 1
+            TypeTxt.Font = Enum.Font.GothamMedium
+            TypeTxt.Text = mod.Type
+            TypeTxt.TextColor3 = Color3.fromRGB(120, 120, 120)
+            TypeTxt.TextSize = 9
+            TypeTxt.TextXAlignment = Enum.TextXAlignment.Left
+            TypeTxt.Parent = Padding
+            
+            local PlayBtn = Instance.new("ImageButton")
+            PlayBtn.Size = UDim2.new(0, 20, 0, 20)
+            PlayBtn.Position = UDim2.new(1, 0, 1, 0)
+            PlayBtn.AnchorPoint = Vector2.new(1, 1)
+            PlayBtn.BackgroundTransparency = 1
+            PlayBtn.Image = SafeGetIcon("play")
+            PlayBtn.ImageColor3 = Color3.fromRGB(0, 255, 150)
+            PlayBtn.Parent = Padding
+            
+            PlayBtn.MouseButton1Click:Connect(function()
+                loadstring(mod.ScriptLink)()
+            end)
+        end
+    end
+end
+
+LoadMods()
+
+-- 9. LOGIC DISCORD & NOTIFICATION
+local function ShowNotify(msg)
+    local NotifyFrame = Instance.new("Frame")
+    NotifyFrame.Size = UDim2.new(0, 100, 0, 25)
+    local mousePos = UserInputService:GetMouseLocation()
+    NotifyFrame.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y - 40)
+    NotifyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    NotifyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    NotifyFrame.BorderSizePixel = 0
+    NotifyFrame.Parent = ScreenGui
+    NotifyFrame.ZIndex = 10
+    
+    Instance.new("UICorner", NotifyFrame).CornerRadius = UDim.new(0, 4)
+    Instance.new("UIStroke", NotifyFrame).Color = Color3.fromRGB(60, 60, 60)
+    
+    local NotifyLabel = Instance.new("TextLabel")
+    NotifyLabel.Size = UDim2.new(1, 0, 1, 0)
+    NotifyLabel.BackgroundTransparency = 1
+    NotifyLabel.Text = msg
+    NotifyLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    NotifyLabel.Font = Enum.Font.GothamBold
+    NotifyLabel.TextSize = 10
+    NotifyLabel.Parent = NotifyFrame
+    
+    task.delay(3, function()
+        NotifyFrame:Destroy()
+    end)
+end
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard("https://discord.gg/NcG6cnZ3m5")
+        ShowNotify("Link Copied!")
+    else
+        ShowNotify("Not Supported")
+    end
+end)
+
+-- 10. LOGIC MINIMIZE & CLOSE
+local dragStartPos = nil
+local lastIconPos = UDim2.new(0.5, -22, 0.5, -22)
+
+MaxBtn.MouseButton1Down:Connect(function()
+    dragStartPos = UserInputService:GetMouseLocation()
+end)
+
+MaxBtn.MouseButton1Up:Connect(function()
+    local dragEndPos = UserInputService:GetMouseLocation()
+    local delta = (dragEndPos - (dragStartPos or dragEndPos)).Magnitude
+    
+    lastIconPos = MaxBtn.Position
+
+    if delta < 5 then
+        MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+        MainFrame.Visible = true
+        MaxBtn.Visible = false
+    end
+end)
+
+MiniBtn.MouseButton1Click:Connect(function()
+    MaxBtn.Position = lastIconPos
+    MainFrame.Visible = false
+    MaxBtn.Visible = true
+end)
+
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
