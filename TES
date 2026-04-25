@@ -34,7 +34,15 @@ local ModDatabase = {
             Image = "rbxassetid://72300574333295",
             ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter'))()"
         }
-    }
+    },
+    [139233844569220] = { -- Last Letter
+        {
+            Name = "Zoo or Oof",
+            Type = "All Version",
+            Image = "",
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof'))()"
+        }
+    },
 }
 -- =============================================================================
 
