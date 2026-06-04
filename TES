@@ -99,7 +99,7 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
 
--- [ KODE DRAG MANUAL MANUAL - RINGAN ]
+-- [ KODE DRAG MANUAL - RINGAN ]
 local function MakeWindowDraggable(frame)
     local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
@@ -294,40 +294,16 @@ UIGrid.CellPadding = UDim2.new(0, 10, 0, 10)
 UIGrid.CellSize = UDim2.new(0, 153, 0, 180)
 
 -- =============================================================================
--- [ PUBLIC ENEMY XYZ PURE VANILLA EXECUTION ]
+-- [ PURE STANDARD LOADSTRING EXECUTION + DESTROY ]
 -- =============================================================================
-local function PureVanillaExecute(scriptUrl)
-    task.spawn(function()
-        -- 1. Ambil data script mentah dari link penyimpan
-        local ok, rawCode = pcall(game.HttpGet, game, scriptUrl)
-        if not ok or not rawCode then 
-            warn("Gagal mengambil skrip dari source.")
-            return 
-        end
-        
-        -- 2. Hancurkan UI Loader secara permanen dari CoreGui
-        if ScreenGui then 
-            ScreenGui:Destroy() 
-        end
-        
-        -- 3. Jeda singkat agar engine Roblox mendinginkan thread UI
-        task.wait(0.1)
-        
-        -- 4. Paksa bersihkan RAM dari aset Loader sebelum mengeksekusi VM PE
-        collectgarbage("collect")
-        
-        -- 5. EKSEKUSI VANILLA MUTLAK (Jangan diubah namanya, biarkan default kosong)
-        local run, err = loadstring(rawCode)
-        if run then
-            -- Jalankan langsung di global environment bawaan executor luar
-            local success, executeErr = pcall(run)
-            if not success then
-                warn("Runtime Error dari skrip Public Enemy: ", executeErr)
-            end
-        else
-            warn("Kesalahan Kompilasi Obfuscator PE: ", err)
-        end
-    end)
+local function PureStandardExecute(scriptUrl)
+    -- Hancurkan UI Loader secara instan agar tidak mengganggu RAM & UI script utama
+    if ScreenGui then 
+        ScreenGui:Destroy() 
+    end
+    
+    -- Jalankan loadstring standard tanpa pelindung tambahan agar ramah semua executor/obfuscator
+    loadstring(game:HttpGet(scriptUrl))()
 end
 
 -- 8. FUNGSI RENDER CARDS
@@ -398,7 +374,7 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    PureVanillaExecute(mod.ScriptLink)
+                    PureStandardExecute(mod.ScriptLink)
                 end
             end)
         end
