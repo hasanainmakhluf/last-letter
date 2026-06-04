@@ -359,22 +359,32 @@ local function LoadMods()
             PlayBtn.ImageColor3 = Color3.fromRGB(0, 255, 150)
             PlayBtn.Parent = Padding
             
-            PlayBtn.MouseButton1Click:Connect(function()
-                if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    -- PROSES DOWNLOAD DAN RUN DI ASYNCHRONOUS THREAD (ANTI-LAG)
-                    task.spawn(function()
-                        local scriptRaw = game:HttpGet(mod.ScriptLink)
-                        loadstring(scriptRaw)()
-                    end)
-                    
-                    -- TIMEOUT DESTROY LOADER SECARA MANDIRI
-                    task.delay(5, function()
-                        if ScreenGui then
-                            ScreenGui:Destroy()
-                        end
-                    end)
-                end
+           PlayBtn.MouseButton1Click:Connect(function()
+    if mod.ScriptLink and mod.ScriptLink ~= "" then
+        -- 1. DOWNLOAD SKRIP DI BACKGROUND THREAD AGAR TIDAK MEMBEKUKAN GAME
+        task.spawn(function()
+            local success, scriptRaw = pcall(function()
+                return game:HttpGet(mod.ScriptLink)
             end)
+            
+            if success and scriptRaw then
+                -- 2. HANCURKAN UI LOADER SEBELUM SKRIP OBFUSCATED JALAN
+                -- Ini trik rahasianya! Memori Loader harus bersih DULUAN dari RAM game
+                if ScreenGui then
+                    ScreenGui:Destroy()
+                end
+                
+                -- 3. JALANKAN SKRIP OBFUSCATED SECARA BEBAS TANPA EMBEL-EMBEL PCALL/LOOP
+                task.spawn(function()
+                    local loadedScript = loadstring(scriptRaw)
+                    if loadedScript then
+                        loadedScript() -- Eksekusi murni di thread terpisah!
+                    end
+                end)
+            end
+        end)
+    end
+end)
         end
     else
         CategoryLabel.Text = "Map: " .. mapName .. " (No Scripts Found)"
