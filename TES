@@ -164,7 +164,7 @@ UIListTitle.Padding = UDim.new(0, 8)
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleContainer
 TitleText.BackgroundTransparency = 1
-TitleText.Size = UDim2.new(0, 95, 1, 0) -- Statis untuk efisiensi
+TitleText.Size = UDim2.new(0, 95, 1, 0)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.Text = "Vanished Hub"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -185,7 +185,7 @@ local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Name = "DiscordBtn"
 DiscordBtn.Parent = TitleContainer
 DiscordBtn.BackgroundTransparency = 1
-DiscordBtn.Size = UDim2.new(0, 60, 1, 0) -- Statis untuk efisiensi
+DiscordBtn.Size = UDim2.new(0, 60, 1, 0)
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.Text = "Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
@@ -209,7 +209,7 @@ UIListDate.Padding = UDim.new(0, 6)
 local DateText = Instance.new("TextLabel")
 DateText.Parent = DateDisplay
 DateText.BackgroundTransparency = 1
-DateText.Size = UDim2.new(0, 75, 1, 0) -- Statis untuk efisiensi
+DateText.Size = UDim2.new(0, 75, 1, 0)
 DateText.Font = Enum.Font.GothamMedium
 DateText.TextColor3 = Color3.fromRGB(150, 150, 150)
 DateText.TextSize = 11
@@ -284,7 +284,7 @@ ScrollFrame.Parent = MainFrame
 ScrollFrame.BackgroundTransparency = 1
 ScrollFrame.Position = UDim2.new(0, 10, 0, 90)
 ScrollFrame.Size = UDim2.new(0, 480, 0, 180)
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 500) -- Nilai statis aman untuk canvas
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
 ScrollFrame.ScrollBarThickness = 2
 ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 40)
 
@@ -302,7 +302,6 @@ local function LoadMods()
     
     local mods = ModDatabase[currentId]
     if mods then
-        -- Kalkulasi dinamis canvas size berdasarkan jumlah item (Hemat memori dibanding AutomaticSize)
         local rowCount = math.ceil(#mods / 3)
         ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, rowCount * 190)
 
@@ -362,28 +361,40 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    -- Sembunyikan UI agar layar bersih
+                    -- Hide UI Loader agar layar langsung bersih
                     MainFrame.Visible = false
                     MaxBtn.Visible = false
                     ShowNotify("Loading Script...")
                     
-                    -- Sediakan "Tombol Penghancur" global yang bisa dipanggil dari luar
-                    _G.DestroyVanishedLoader = function()
+                    -- Siapkan sinyal global agar anti-eror nil
+                    _G.ScriptLoadedReady = false
+                    
+                    -- Sistem Pemantau Antrean + Jeda Jabat Tangan 5 Detik
+                    task.spawn(function()
+                        local timeout = 0
+                        while not _G.ScriptLoadedReady and timeout < 30 do
+                            task.wait(0.5)
+                            timeout = timeout + 0.5
+                        end
+                        
+                        -- Beri jeda 5 detik setelah mendapatkan konfirmasi sinyal true
+                        task.wait(5)
+                        
                         if ScreenGui then
                             ScreenGui:Destroy()
-                            _G.DestroyVanishedLoader = nil
-                            print("Loader sukses dihancurkan oleh script utama!")
+                            print("Loader sukses dihancurkan setelah jeda aman 5 detik!")
                         end
-                    end
+                    end)
                     
-                    -- Jalankan script utama
+                    -- Eksekusi skrip game utama
                     task.spawn(function()
                         local runSuccess, errorMsg = pcall(function()
                             loadstring(game:HttpGet(mod.ScriptLink))()
                         end)
                         if not runSuccess then
                             warn("Gagal menjalankan script: " .. tostring(errorMsg))
-                            MainFrame.Visible = true -- Munculkan lagi jika gagal total
+                            _G.ScriptLoadedReady = true -- Bypass agar hancur jika error
+                            MainFrame.Visible = true
                         end
                     end)
                 end
@@ -423,7 +434,7 @@ local function ShowNotify(msg)
     NotifyLabel.Parent = NotifyFrame
     
     task.delay(3, function()
-        NotifyFrame:Destroy()
+        if NotifyFrame then NotifyFrame:Destroy() end
     end)
 end
 
@@ -446,7 +457,6 @@ MiniBtn.MouseButton1Click:Connect(function()
     MaxBtn.Visible = true
 end)
 
--- Tombol maximize klik biasa tanpa mengacaukan posisi drag
 MaxBtn.MouseButton1Click:Connect(function()
     MainFrame.Position = UDim2.new(0.5, -250, 0.5, -140)
     MainFrame.Visible = true
