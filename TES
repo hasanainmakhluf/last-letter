@@ -359,40 +359,50 @@ local function LoadMods()
             PlayBtn.ImageColor3 = Color3.fromRGB(0, 255, 150)
             PlayBtn.Parent = Padding
             
-           PlayBtn.MouseButton1Click:Connect(function()
-    if mod.ScriptLink and mod.ScriptLink ~= "" then
-        -- 1. Ambil source code-nya dulu
-        local success, scriptRaw = pcall(function()
-            return game:HttpGet(mod.ScriptLink)
-        end)
-        
-        if success and scriptRaw then
-            -- 2. Hancurkan Loader total dari memori
-            if ScreenGui then
-                ScreenGui:Destroy()
-            end
-            
-            -- 3. Beri jeda 0.1 detik agar memori Loader benar-benar bersih dari RAM
-            task.wait(0.1)
-            
-            -- 4. EKSEKUSI MENGGUNAKAN TASK.DEFER (Bukan task.spawn)
-            -- task.defer melempar eksekusi kode obfuscated ke siklus frame kosong Roblox berikutnya
-            -- sehingga tidak mengganggu antrean render utama yang bikin micro lag
-            task.defer(function()
-                local fn = loadstring(scriptRaw)
-                if fn then
-                    -- Jalankan GC secara manual sebelum skrip obfuscated berjalan
-                    -- untuk mengosongkan RAM yang tersumbat akibat Loader tadi
-                    pcall(cloneref or function(...) return ... end, game:GetService("ScriptContext")) 
+            PlayBtn.MouseButton1Click:Connect(function()
+                if mod.ScriptLink and mod.ScriptLink ~= "" then
+                    -- 1. Ambil data script secara mandiri
+                    local success, scriptRaw = pcall(function()
+                        return game:HttpGet(mod.ScriptLink)
+                    end)
                     
-                    fn() -- RUN SKRIP OBFUSCATED
+                    if success and scriptRaw then
+                        -- 2. Hancurkan total Loader biar RAM bersih dulan
+                        if ScreenGui then
+                            ScreenGui:Destroy()
+                        end
+                        
+                        -- 3. Jeda paksa agar Roblox selesai beres-beres UI Loader dari RAM
+                        task.wait(0.2)
+                        
+                        -- 4. METODE TEMBAK TOTAL (Pembersihan Garbage Collector)
+                        task.spawn(function()
+                            -- Paksa sampah memori dari Loader tadi dibuang detik ini juga
+                            for i = 1, 5 do
+                                if setupvalue and loadstring then
+                                    pcall(setupvalue, loadstring, 1, nil)
+                                end
+                                collectgarbage("collect")
+                            end
+                            
+                            -- 5. EKSEKUSI UTAMA (Bungkus di anonymous function tingkat paling tinggi)
+                            local cleanExec = [[
+                                task.spawn(function()
+                                    script_name = "Vanished_Core"
+                                    ]] .. scriptRaw .. [[
+                                end)
+                            ]]
+                            
+                            local run, err = loadstring(cleanExec, "=VanishedHub_Engine")
+                            if run then
+                                run()
+                            else
+                                warn("Gagal kompilasi: ", err)
+                            end
+                        end)
+                    end
                 end
             end)
-        end
-    end
-end)
-    end
-end)
         end
     else
         CategoryLabel.Text = "Map: " .. mapName .. " (No Scripts Found)"
