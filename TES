@@ -361,23 +361,16 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    ShowNotify("Executing...")
-                    
-                    -- 1. Download & Jalankan script utama di thread terpisah agar game tidak hang
+                    -- PROSES DOWNLOAD DAN RUN DI ASYNCHRONOUS THREAD (ANTI-LAG)
                     task.spawn(function()
-                        local runSuccess, errorMsg = pcall(function()
-                            loadstring(game:HttpGet(mod.ScriptLink))()
-                        end)
-                        if not runSuccess then
-                            warn("Gagal menjalankan script: " .. tostring(errorMsg))
-                        end
+                        local scriptRaw = game:HttpGet(mod.ScriptLink)
+                        loadstring(scriptRaw)()
                     end)
                     
-                    -- 2. GUI Loader dibiarkan diam di tempat selama 5 detik, lalu hancur total!
+                    -- TIMEOUT DESTROY LOADER SECARA MANDIRI
                     task.delay(5, function()
                         if ScreenGui then
                             ScreenGui:Destroy()
-                            print("Loader dihancurkan otomatis setelah cooldown 5 detik.")
                         end
                     end)
                 end
@@ -394,7 +387,7 @@ LoadMods()
 -- 9. LOGIC DISCORD & NOTIFICATION
 local function ShowNotify(msg)
     local NotifyFrame = Instance.new("Frame")
-    NotifyFrame.Size = UDim2.new(0, 100, 0, 25)
+    NotifyFrame.Size = UDim2.new(0, 110, 0, 25)
     local mousePos = UserInputService:GetMouseLocation()
     NotifyFrame.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y - 40)
     NotifyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
