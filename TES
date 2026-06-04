@@ -40,7 +40,7 @@ local ModDatabase = {
             Name = "Zoo or Oof",
             Type = "All Version",
             Image = "",
-            ScriptLink = "https://raw.githubusercontent.com/hasanainmakuf/roblox/refs/heads/main/zoooroof"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof"
         }
     },
     [93161403934015] = {
@@ -84,11 +84,6 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VanishedHub_Final"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- [ BINDABLE EVENT UNTUK JABAT TANGAN AMAN ]
-local DestroyEvent = ScreenGui:FindFirstChild("DestroyEvent") or Instance.new("BindableEvent")
-DestroyEvent.Name = "DestroyEvent"
-DestroyEvent.Parent = ScreenGui
 
 -- 3. MAIN FRAME (500x280)
 local MainFrame = Instance.new("Frame")
@@ -298,19 +293,6 @@ UIGrid.Parent = ScrollFrame
 UIGrid.CellPadding = UDim2.new(0, 10, 0, 10)
 UIGrid.CellSize = UDim2.new(0, 153, 0, 180)
 
--- [ LISTENER: TUNGGU EVENT TEMBAKAN DARI GITHUB ]
-local isFired = false
-DestroyEvent.Event:Connect(function()
-    if not isFired then
-        isFired = true
-        task.wait(5) -- Beri jeda 5 detik pasca skrip utama dimuat
-        if ScreenGui then
-            ScreenGui:Destroy()
-            print("Loader sukses dihancurkan via BindableEvent + Jeda 5 Detik!")
-        end
-    end
-end)
-
 -- 8. FUNGSI RENDER CARDS
 local function LoadMods()
     local currentId = game.PlaceId
@@ -379,26 +361,23 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    -- Langsung sembunyikan UI agar tidak lag
-                    MainFrame.Visible = false
-                    MaxBtn.Visible = false
-                    ShowNotify("Loading Script...")
+                    ShowNotify("Executing...")
                     
-                    -- Eksekusi skrip game utama
+                    -- 1. Download & Jalankan script utama di thread terpisah agar game tidak hang
                     task.spawn(function()
                         local runSuccess, errorMsg = pcall(function()
                             loadstring(game:HttpGet(mod.ScriptLink))()
                         end)
                         if not runSuccess then
                             warn("Gagal menjalankan script: " .. tostring(errorMsg))
-                            MainFrame.Visible = true
                         end
                     end)
                     
-                    -- Failsafe: Jika script utama gagal mengirim sinyal dalam 25 detik, hancurkan otomatis agar tidak stuck
-                    task.delay(25, function()
-                        if not isFired and ScreenGui then
+                    -- 2. GUI Loader dibiarkan diam di tempat selama 5 detik, lalu hancur total!
+                    task.delay(5, function()
+                        if ScreenGui then
                             ScreenGui:Destroy()
+                            print("Loader dihancurkan otomatis setelah cooldown 5 detik.")
                         end
                     end)
                 end
@@ -468,11 +447,3 @@ MaxBtn.MouseButton1Click:Connect(function()
 end)
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-
--- Taruh ini di BARIS PALING BAWAH script utama kamu (Ganti line 367 yang error)
-pcall(function()
-    local targetGui = game:GetService("CoreGui"):FindFirstChild("VanishedHub_Final")
-    if targetGui and targetGui:FindFirstChild("DestroyEvent") then
-        targetGui.DestroyEvent:Fire()
-    end
-end)
