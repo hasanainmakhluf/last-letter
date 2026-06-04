@@ -362,28 +362,45 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    -- 1. Sembunyikan UI utama langsung agar layar bersih
+                    -- 1. Sembunyikan UI utama agar tidak mengganggu layar
                     MainFrame.Visible = false
                     MaxBtn.Visible = false
                     
-                    -- 2. Tampilkan notifikasi kalau skrip sedang dimuat
-                    ShowNotify("Loading Script...")
+                    ShowNotify("Downloading...")
                     
-                    -- 3. Jalankan skrip di thread terpisah agar tidak lag
+                    -- 2. Jalankan proses download & load di thread terpisah
                     task.spawn(function()
-                        local runSuccess, errorMsg = pcall(function()
-                            loadstring(game:HttpGet(mod.ScriptLink))()
+                        local scriptCode = nil
+                        
+                        -- Ambil kode dari internet terlebih dahulu
+                        local downloadSuccess, err = pcall(function()
+                            scriptCode = game:HttpGet(mod.ScriptLink)
                         end)
-                        if not runSuccess then
-                            warn("Gagal menjalankan script: " .. tostring(errorMsg))
-                        end
-                    end)
-                    
-                    -- 4. Hancurkan Loader sampai ke akar-akarnya dalam 5 detik
-                    task.delay(5, function()
-                        if ScreenGui then
-                            ScreenGui:Destroy()
-                            print("VanishedHub Loader successfully destroyed to prevent lag!")
+                        
+                        if downloadSuccess and scriptCode then
+                            ShowNotify("Running Script!")
+                            
+                            -- Eksekusi skripnya
+                            local runSuccess, runErr = pcall(function()
+                                loadstring(scriptCode)()
+                            end)
+                            
+                            if not runSuccess then
+                                warn("Gagal menjalankan script: " .. tostring(runErr))
+                            end
+                            
+                            -- 3. JALANKAN TIMER AMAN (Hanya setelah skrip UTAMA sukses berjalan)
+                            task.delay(5, function()
+                                if ScreenGui then
+                                    ScreenGui:Destroy()
+                                    print("Loader sukses dihancurkan tanpa mengganggu skrip utama!")
+                                end
+                            end)
+                        else
+                            -- Jika gagal download, munculkan lagi UI-nya agar player bisa coba lagi
+                            warn("Gagal mendownload script: " .. tostring(err))
+                            ShowNotify("Download Failed!")
+                            MainFrame.Visible = true
                         end
                     end)
                 end
