@@ -7,7 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 -- [ DATABASE MODS - SETTING DI SINI ]
 -- =============================================================================
 local ModDatabase = {
-    [130342654546662] = { -- ID Game Sambung Kata
+    [130342654546662] = {
         {
             Name = "Sambung Kata | PC",
             Type = "PC Version",
@@ -27,15 +27,15 @@ local ModDatabase = {
             ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/kamus-sambung-kata"
         }
     },
-    [129866685202296] = { -- Last Letter
+    [129866685202296] = {
         {
             Name = "Last Letter | PC",
             Type = "PC Version",
             Image = "rbxassetid://72300574333295",
-            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter" -- FIX: nama akun github dibetulkan
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter"
         }
     },
-    [139233844569220] = { -- Zoo or Oof
+    [139233844569220] = {
         {
             Name = "Zoo or Oof",
             Type = "All Version",
@@ -43,7 +43,7 @@ local ModDatabase = {
             ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof"
         }
     },
-    [93161403934015] = { -- Free Fire
+    [93161403934015] = {
         {
             Name = "Free Fire",
             Type = "All Version",
@@ -51,7 +51,7 @@ local ModDatabase = {
             ScriptLink = "https://pastebin.com/rFaZytbK"
         }
     },
-    [93978595733734] = { -- VD
+    [93978595733734] = {
         {
             Name = "Violence District",
             Type = "All Version",
@@ -60,7 +60,6 @@ local ModDatabase = {
         }
     },
 }
--- =============================================================================
 
 -- 1. LOAD ICONS
 local success, IconsV2 = pcall(function()
@@ -86,22 +85,48 @@ ScreenGui.Name = "VanishedHub_Final"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 3. MAIN FRAME (500x300)
+-- 3. MAIN FRAME (500x280)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -140)
 MainFrame.Size = UDim2.new(0, 500, 0, 280)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
 
--- 4. HEADER (ROW 1)
+-- [ KODE DRAG MANUAL MANUAL - RINGAN ]
+local function MakeWindowDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+MakeWindowDraggable(MainFrame)
+
+-- 4. HEADER
 local Header = Instance.new("Frame")
 Header.Name = "Header"
 Header.Parent = MainFrame
@@ -139,8 +164,7 @@ UIListTitle.Padding = UDim.new(0, 8)
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleContainer
 TitleText.BackgroundTransparency = 1
-TitleText.Size = UDim2.new(0, 0, 1, 0)
-TitleText.AutomaticSize = Enum.AutomaticSize.X
+TitleText.Size = UDim2.new(0, 95, 1, 0) -- Statis untuk efisiensi
 TitleText.Font = Enum.Font.GothamBold
 TitleText.Text = "Vanished Hub"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -161,8 +185,7 @@ local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Name = "DiscordBtn"
 DiscordBtn.Parent = TitleContainer
 DiscordBtn.BackgroundTransparency = 1
-DiscordBtn.Size = UDim2.new(0, 0, 1, 0)
-DiscordBtn.AutomaticSize = Enum.AutomaticSize.X
+DiscordBtn.Size = UDim2.new(0, 60, 1, 0) -- Statis untuk efisiensi
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.Text = "Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
@@ -186,8 +209,7 @@ UIListDate.Padding = UDim.new(0, 6)
 local DateText = Instance.new("TextLabel")
 DateText.Parent = DateDisplay
 DateText.BackgroundTransparency = 1
-DateText.Size = UDim2.new(0, 0, 1, 0)
-DateText.AutomaticSize = Enum.AutomaticSize.X
+DateText.Size = UDim2.new(0, 75, 1, 0) -- Statis untuk efisiensi
 DateText.Font = Enum.Font.GothamMedium
 DateText.TextColor3 = Color3.fromRGB(150, 150, 150)
 DateText.TextSize = 11
@@ -240,30 +262,29 @@ MaxBtn.Size = UDim2.new(0, 45, 0, 45)
 MaxBtn.Position = UDim2.new(0.5, -22, 0.5, -22) 
 MaxBtn.Visible = false
 MaxBtn.Image = "rbxassetid://85002796312935"
-MaxBtn.Draggable = true
 Instance.new("UICorner", MaxBtn).CornerRadius = UDim.new(0, 8)
 local Stroke = Instance.new("UIStroke", MaxBtn)
 Stroke.Color = Color3.fromRGB(40, 40, 40)
+MakeWindowDraggable(MaxBtn)
 
--- 6. CATEGORY LABEL (ROW 2)
+-- 6. CATEGORY LABEL
 local CategoryLabel = Instance.new("TextLabel")
 CategoryLabel.Parent = MainFrame
 CategoryLabel.BackgroundTransparency = 1
 CategoryLabel.Position = UDim2.new(0, 15, 0, 65) 
-CategoryLabel.Size = UDim2.new(0, 200, 0, 20)
+CategoryLabel.Size = UDim2.new(0, 470, 0, 20)
 CategoryLabel.Font = Enum.Font.GothamMedium
 CategoryLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 CategoryLabel.TextSize = 11
 CategoryLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- 7. SCROLLING AREA (MOD LIST)
+-- 7. SCROLLING AREA
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Parent = MainFrame
 ScrollFrame.BackgroundTransparency = 1
 ScrollFrame.Position = UDim2.new(0, 10, 0, 90)
-ScrollFrame.Size = UDim2.new(0, 480, 0, 200)
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) 
-ScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollFrame.Size = UDim2.new(0, 480, 0, 180)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 500) -- Nilai statis aman untuk canvas
 ScrollFrame.ScrollBarThickness = 2
 ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 40)
 
@@ -281,7 +302,12 @@ local function LoadMods()
     
     local mods = ModDatabase[currentId]
     if mods then
-        for _, mod in pairs(mods) do
+        -- Kalkulasi dinamis canvas size berdasarkan jumlah item (Hemat memori dibanding AutomaticSize)
+        local rowCount = math.ceil(#mods / 3)
+        ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, rowCount * 190)
+
+        for i = 1, #mods do
+            local mod = mods[i]
             local Card = Instance.new("Frame")
             Card.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
             Card.BorderSizePixel = 0
@@ -336,17 +362,20 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    local runSuccess, errorMsg = pcall(function()
-                        loadstring(game:HttpGet(mod.ScriptLink))()
+                    task.spawn(function() -- Bungkus di thread terpisah agar UI tidak freeze
+                        local runSuccess, errorMsg = pcall(function()
+                            loadstring(game:HttpGet(mod.ScriptLink))()
+                        end)
+                        if not runSuccess then
+                            warn("Gagal menjalankan script: " .. tostring(errorMsg))
+                        end
                     end)
-                    if not runSuccess then
-                        warn("Gagal menjalankan script: " .. tostring(errorMsg))
-                    end
                 end
             end)
         end
     else
         CategoryLabel.Text = "Map: " .. mapName .. " (No Scripts Found)"
+        ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     end
 end
 
@@ -395,27 +424,17 @@ end)
 local dragStartPos = nil
 local lastIconPos = UDim2.new(0.5, -22, 0.5, -22)
 
-MaxBtn.MouseButton1Down:Connect(function()
-    dragStartPos = UserInputService:GetMouseLocation()
-end)
-
-MaxBtn.MouseButton1Up:Connect(function()
-    local dragEndPos = UserInputService:GetMouseLocation()
-    local delta = (dragEndPos - (dragStartPos or dragEndPos)).Magnitude
-    
-    lastIconPos = MaxBtn.Position
-
-    if delta < 5 then
-        MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
-        MainFrame.Visible = true
-        MaxBtn.Visible = false
-    end
-end)
-
 MiniBtn.MouseButton1Click:Connect(function()
-    MaxBtn.Position = lastIconPos
+    lastIconPos = MaxBtn.Position
     MainFrame.Visible = false
     MaxBtn.Visible = true
+end)
+
+-- Tombol maximize klik biasa tanpa mengacaukan posisi drag
+MaxBtn.MouseButton1Click:Connect(function()
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -140)
+    MainFrame.Visible = true
+    MaxBtn.Visible = false
 end)
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
