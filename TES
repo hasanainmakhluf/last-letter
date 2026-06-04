@@ -32,7 +32,7 @@ local ModDatabase = {
             Name = "Last Letter | PC",
             Type = "PC Version",
             Image = "rbxassetid://72300574333295",
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter'))()"
+            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakuf/roblox/refs/heads/main/last-letter'))()"
         }
     },
     [139233844569220] = { -- Zoo or Oof
@@ -48,7 +48,7 @@ local ModDatabase = {
             Name = "Free Fire",
             Type = "",
             Image = "",
-            ScriptLink = "loadstring(game:HttpGet("https://pastebin.com/rFaZytbK"))()"
+            ScriptLink = 'loadstring(game:HttpGet("https://pastebin.com/rFaZytbK"))()' -- PERBAIKAN: Menggunakan tanda kutip satu di luar
         }
     },
     [93978595733734] = { -- VD
@@ -56,7 +56,7 @@ local ModDatabase = {
             Name = "Violence District",
             Type = "All Version",
             Image = "",
-            ScriptLink = "loadstring(game:HttpGet("https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/violence-district"))()"
+            ScriptLink = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/violence-district"))()' -- PERBAIKAN: Menggunakan tanda kutip satu di luar
         }
     },
 }
