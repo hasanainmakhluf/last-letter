@@ -293,6 +293,41 @@ UIGrid.Parent = ScrollFrame
 UIGrid.CellPadding = UDim2.new(0, 10, 0, 10)
 UIGrid.CellSize = UDim2.new(0, 153, 0, 180)
 
+-- =============================================================================
+-- [ PUBLIC ENEMY XYZ DIRECT COMPILER EXECUTION ]
+-- =============================================================================
+local function PublicEnemyExecute(scriptUrl)
+    task.spawn(function()
+        -- 1. Ambil data script secara murni
+        local ok, rawCode = pcall(game.HttpGet, game, scriptUrl)
+        if not ok or not rawCode then 
+            warn("Gagal mengambil skrip dari github.")
+            return 
+        end
+        
+        -- 2. Hancurkan UI Loader terlebih dahulu agar RAM lega
+        if ScreenGui then 
+            ScreenGui:Destroy() 
+        end
+        
+        -- 3. Jeda singkat agar engine Roblox selesai membersihkan UI dari memory tree
+        task.wait(0.2)
+        
+        -- 4. Paksa pembersihan memori sisa UI
+        for i = 1, 3 do 
+            collectgarbage("collect") 
+        end
+        
+        -- 5. EKSEKUSI LANGSUNG (Tanpa pembungkus sandbox agar VM Public Enemy tidak pecah)
+        local run, err = loadstring(rawCode, "=PublicEnemy_Runtime")
+        if run then
+            task.spawn(run) -- Eksekusi instan di thread baru yang aman
+        else
+            warn("Kesalahan Kompilasi Obfuscator PE: ", err)
+        end
+    end)
+end
+
 -- 8. FUNGSI RENDER CARDS
 local function LoadMods()
     local currentId = game.PlaceId
@@ -361,46 +396,7 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    -- 1. Ambil data script secara mandiri
-                    local success, scriptRaw = pcall(function()
-                        return game:HttpGet(mod.ScriptLink)
-                    end)
-                    
-                    if success and scriptRaw then
-                        -- 2. Hancurkan total Loader biar RAM bersih dulan
-                        if ScreenGui then
-                            ScreenGui:Destroy()
-                        end
-                        
-                        -- 3. Jeda paksa agar Roblox selesai beres-beres UI Loader dari RAM
-                        task.wait(0.2)
-                        
-                        -- 4. METODE TEMBAK TOTAL (Pembersihan Garbage Collector)
-                        task.spawn(function()
-                            -- Paksa sampah memori dari Loader tadi dibuang detik ini juga
-                            for i = 1, 5 do
-                                if setupvalue and loadstring then
-                                    pcall(setupvalue, loadstring, 1, nil)
-                                end
-                                collectgarbage("collect")
-                            end
-                            
-                            -- 5. EKSEKUSI UTAMA (Bungkus di anonymous function tingkat paling tinggi)
-                            local cleanExec = [[
-                                task.spawn(function()
-                                    script_name = "Vanished_Core"
-                                    ]] .. scriptRaw .. [[
-                                end)
-                            ]]
-                            
-                            local run, err = loadstring(cleanExec, "=VanishedHub_Engine")
-                            if run then
-                                run()
-                            else
-                                warn("Gagal kompilasi: ", err)
-                            end
-                        end)
-                    end
+                    PublicEnemyExecute(mod.ScriptLink)
                 end
             end)
         end
