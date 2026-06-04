@@ -32,7 +32,7 @@ local ModDatabase = {
             Name = "Last Letter | PC",
             Type = "PC Version",
             Image = "rbxassetid://72300574333295",
-            ScriptLink = "https://raw.githubusercontent.com/hasanainmakuf/roblox/refs/heads/main/last-letter"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter" -- FIX: nama akun github dibetulkan
         }
     },
     [139233844569220] = { -- Zoo or Oof
@@ -334,7 +334,6 @@ local function LoadMods()
             PlayBtn.ImageColor3 = Color3.fromRGB(0, 255, 150)
             PlayBtn.Parent = Padding
             
-            -- EKSEKUSI SKRIP YANG SUDAH DIPERBAIKI
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
                     local runSuccess, errorMsg = pcall(function()
