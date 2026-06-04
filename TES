@@ -35,12 +35,20 @@ local ModDatabase = {
             ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/last-letter'))()"
         }
     },
-    [139233844569220] = { -- Last Letter
+    [139233844569220] = { -- Zoo or Oof
         {
             Name = "Zoo or Oof",
             Type = "All Version",
             Image = "",
             ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof'))()"
+        }
+    },
+    [93161403934015] = { -- Free Fire
+        {
+            Name = "Zoo or Oof",
+            Type = "All Version",
+            Image = "",
+            ScriptLink = "loadstring(game:HttpGet("https://pastebin.com/rFaZytbK"))()"
         }
     },
 }
