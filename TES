@@ -45,10 +45,18 @@ local ModDatabase = {
     },
     [93161403934015] = { -- Free Fire
         {
-            Name = "Zoo or Oof",
-            Type = "All Version",
+            Name = "Free Fire",
+            Type = "",
             Image = "",
             ScriptLink = "loadstring(game:HttpGet("https://pastebin.com/rFaZytbK"))()"
+        }
+    },
+    [93978595733734] = { -- VD
+        {
+            Name = "Violence District",
+            Type = "All Version",
+            Image = "",
+            ScriptLink = "loadstring(game:HttpGet("https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/violence-district"))()"
         }
     },
 }
