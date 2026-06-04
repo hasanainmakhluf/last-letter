@@ -12,19 +12,19 @@ local ModDatabase = {
             Name = "Sambung Kata | PC",
             Type = "PC Version",
             Image = "rbxassetid://112441759734101", 
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata'))()"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata"
         },
         {
             Name = "Sambung Kata | Mobile",
             Type = "Mobile Version",
             Image = "rbxassetid://112441759734101",
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata-mobile'))()"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/sambung-kata-mobile"
         },
         {
             Name = "Sambung Kata | Kamus",
             Type = "Kamus Only",
             Image = "rbxassetid://112441759734101",
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/kamus-sambung-kata'))()"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/kamus-sambung-kata"
         }
     },
     [129866685202296] = { -- Last Letter
@@ -32,7 +32,7 @@ local ModDatabase = {
             Name = "Last Letter | PC",
             Type = "PC Version",
             Image = "rbxassetid://72300574333295",
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakuf/roblox/refs/heads/main/last-letter'))()"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakuf/roblox/refs/heads/main/last-letter"
         }
     },
     [139233844569220] = { -- Zoo or Oof
@@ -40,15 +40,15 @@ local ModDatabase = {
             Name = "Zoo or Oof",
             Type = "All Version",
             Image = "",
-            ScriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof'))()"
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/zoooroof"
         }
     },
     [93161403934015] = { -- Free Fire
         {
             Name = "Free Fire",
-            Type = "",
+            Type = "All Version",
             Image = "",
-            ScriptLink = 'loadstring(game:HttpGet("https://pastebin.com/rFaZytbK"))()' -- PERBAIKAN: Menggunakan tanda kutip satu di luar
+            ScriptLink = "https://pastebin.com/rFaZytbK"
         }
     },
     [93978595733734] = { -- VD
@@ -56,7 +56,7 @@ local ModDatabase = {
             Name = "Violence District",
             Type = "All Version",
             Image = "",
-            ScriptLink = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/violence-district"))()' -- PERBAIKAN: Menggunakan tanda kutip satu di luar
+            ScriptLink = "https://raw.githubusercontent.com/hasanainmakhluf/roblox/refs/heads/main/violence-district"
         }
     },
 }
@@ -69,8 +69,12 @@ end)
 
 local function SafeGetIcon(name)
     if success and IconsV2 then
-        IconsV2.SetIconsType("lucide")
-        return IconsV2.GetIcon(name)
+        local iconId = nil
+        pcall(function()
+            IconsV2.SetIconsType("lucide")
+            iconId = IconsV2.GetIcon(name)
+        end)
+        return iconId or "rbxassetid://10734898355"
     else
         return "rbxassetid://10734898355"
     end
@@ -123,7 +127,7 @@ local TitleContainer = Instance.new("Frame")
 TitleContainer.Parent = Header
 TitleContainer.BackgroundTransparency = 1
 TitleContainer.Position = UDim2.new(0, 42, 0, 0)
-TitleContainer.Size = UDim2.new(1, -200, 1, 0) -- Diperlebar sedikit agar aman
+TitleContainer.Size = UDim2.new(1, -200, 1, 0)
 
 local UIListTitle = Instance.new("UIListLayout")
 UIListTitle.Parent = TitleContainer
@@ -165,7 +169,6 @@ DiscordBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
 DiscordBtn.TextSize = 14
 
 -- 5. BUTTONS (DATE, MINIMIZE, CLOSE)
--- Container Tanggal (Sebelah kiri Minus)
 local DateDisplay = Instance.new("Frame")
 DateDisplay.Name = "DateDisplay"
 DateDisplay.Parent = Header
@@ -188,7 +191,7 @@ DateText.AutomaticSize = Enum.AutomaticSize.X
 DateText.Font = Enum.Font.GothamMedium
 DateText.TextColor3 = Color3.fromRGB(150, 150, 150)
 DateText.TextSize = 11
-DateText.Text = os.date("%d %b %Y") -- Format: 03 Mar 2026
+DateText.Text = os.date("%d %b %Y")
 
 local DateIcon = Instance.new("ImageLabel")
 DateIcon.Parent = DateDisplay
@@ -197,7 +200,6 @@ DateIcon.Size = UDim2.new(0, 14, 0, 14)
 DateIcon.Image = SafeGetIcon("calendar")
 DateIcon.ImageColor3 = Color3.fromRGB(150, 150, 150)
 
--- Tombol Navigasi
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = Header
 CloseBtn.BackgroundTransparency = 1
@@ -230,7 +232,6 @@ MiniIcon.Size = UDim2.new(0, 18, 0, 18)
 MiniIcon.Image = SafeGetIcon("minus")
 MiniIcon.ImageColor3 = Color3.fromRGB(180, 180, 180)
 
--- MAXIMIZE BUTTON (Floating)
 local MaxBtn = Instance.new("ImageButton")
 MaxBtn.Name = "MaximizeButton"
 MaxBtn.Parent = ScreenGui
@@ -241,7 +242,8 @@ MaxBtn.Visible = false
 MaxBtn.Image = "rbxassetid://85002796312935"
 MaxBtn.Draggable = true
 Instance.new("UICorner", MaxBtn).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", MaxBtn).Color = Color3.fromRGB(40, 40, 40)
+local Stroke = Instance.new("UIStroke", MaxBtn)
+Stroke.Color = Color3.fromRGB(40, 40, 40)
 
 -- 6. CATEGORY LABEL (ROW 2)
 local CategoryLabel = Instance.new("TextLabel")
@@ -295,7 +297,7 @@ local function LoadMods()
             
             local Img = Instance.new("ImageLabel")
             Img.Size = UDim2.new(1, 0, 0.7, 0)
-            Img.Image = mod.Image
+            Img.Image = mod.Image ~= "" and mod.Image or "rbxassetid://10734898355"
             Img.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             Img.ScaleType = Enum.ScaleType.Crop
             Img.Parent = Padding
@@ -332,10 +334,20 @@ local function LoadMods()
             PlayBtn.ImageColor3 = Color3.fromRGB(0, 255, 150)
             PlayBtn.Parent = Padding
             
+            -- EKSEKUSI SKRIP YANG SUDAH DIPERBAIKI
             PlayBtn.MouseButton1Click:Connect(function()
-                loadstring(mod.ScriptLink)()
+                if mod.ScriptLink and mod.ScriptLink ~= "" then
+                    local runSuccess, errorMsg = pcall(function()
+                        loadstring(game:HttpGet(mod.ScriptLink))()
+                    end)
+                    if not runSuccess then
+                        warn("Gagal menjalankan script: " .. tostring(errorMsg))
+                    end
+                end
             end)
         end
+    else
+        CategoryLabel.Text = "Map: " .. mapName .. " (No Scripts Found)"
     end
 end
 
@@ -354,7 +366,8 @@ local function ShowNotify(msg)
     NotifyFrame.ZIndex = 10
     
     Instance.new("UICorner", NotifyFrame).CornerRadius = UDim.new(0, 4)
-    Instance.new("UIStroke", NotifyFrame).Color = Color3.fromRGB(60, 60, 60)
+    local StrokeNotify = Instance.new("UIStroke", NotifyFrame)
+    StrokeNotify.Color = Color3.fromRGB(60, 60, 60)
     
     local NotifyLabel = Instance.new("TextLabel")
     NotifyLabel.Size = UDim2.new(1, 0, 1, 0)
