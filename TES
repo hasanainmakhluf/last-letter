@@ -362,12 +362,28 @@ local function LoadMods()
             
             PlayBtn.MouseButton1Click:Connect(function()
                 if mod.ScriptLink and mod.ScriptLink ~= "" then
-                    task.spawn(function() -- Bungkus di thread terpisah agar UI tidak freeze
+                    -- 1. Sembunyikan UI utama langsung agar layar bersih
+                    MainFrame.Visible = false
+                    MaxBtn.Visible = false
+                    
+                    -- 2. Tampilkan notifikasi kalau skrip sedang dimuat
+                    ShowNotify("Loading Script...")
+                    
+                    -- 3. Jalankan skrip di thread terpisah agar tidak lag
+                    task.spawn(function()
                         local runSuccess, errorMsg = pcall(function()
                             loadstring(game:HttpGet(mod.ScriptLink))()
                         end)
                         if not runSuccess then
                             warn("Gagal menjalankan script: " .. tostring(errorMsg))
+                        end
+                    end)
+                    
+                    -- 4. Hancurkan Loader sampai ke akar-akarnya dalam 5 detik
+                    task.delay(5, function()
+                        if ScreenGui then
+                            ScreenGui:Destroy()
+                            print("VanishedHub Loader successfully destroyed to prevent lag!")
                         end
                     end)
                 end
